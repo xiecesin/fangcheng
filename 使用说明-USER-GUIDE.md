@@ -8,7 +8,7 @@
 |------|---------|
 | 喜欢Python，快速上手 | ✅ **Python版本** |
 | 学习Java，面向对象实践 | ✅ **Java版本** |
-| 科学计算，数值分析 | ✅ Python + NumPy |
+| 科学计算，符号计算 | ✅ Python + SymPy |
 | 纯手工实现，理解原理 | ✅ Java（无外部依赖） |
 | 需要测试框架 | ✅ Python（pytest） |
 | 需要Maven构建 | ✅ Java |
@@ -53,20 +53,26 @@ Select equation type:
 ### 3️⃣ 编程方式使用
 
 ```python
-from src.equation_solver import EquationSolver
-from src.verifier import SolutionVerifier
+from src.equation_solver import SymbolicSolver, MarkdownExporter
 
 # 求解二次方程 x² - 5x + 6 = 0
-solution = EquationSolver.solve_quadratic(1, -5, 6)
+solution = SymbolicSolver.solve_quadratic(1, -5, 6, verbose=True)
 
-# 打印详细步骤
-EquationSolver.print_solution(solution)
+# 求解三次方程 x³ - 6x² + 11x - 6 = 0
+solution = SymbolicSolver.solve_cubic(1, -6, 11, -6, verbose=True)
 
-# 验证解
-verifier = SolutionVerifier()
-results = verifier.verify_quadratic(1, -5, 6, solution.roots)
-verifier.print_verification_results(results)
+# 求解四次方程 x⁴ - 5x² + 4 = 0
+solution = SymbolicSolver.solve_quartic(1, 0, -5, 0, 4, verbose=True)
+
+# 导出为Markdown文件
+MarkdownExporter.export_solution(solution, "solution.md")
 ```
+
+**说明**：
+- 使用 `SymbolicSolver` 类进行符号求解，返回精确解
+- `verbose=True` 会打印详细的求解步骤
+- 求解结果自动保存到 `solutions/` 目录下的Markdown文件
+- 验证功能已内置在求解过程中
 
 ### 4️⃣ 运行测试
 
@@ -178,11 +184,12 @@ mvn clean
 
 ### 场景2: 验证数学作业答案
 
-使用验证功能，将你手算的答案代入验证。
+Python版本的验证功能已内置在求解过程中，会自动验证所有求得的根。
 
 ```python
-# Python示例
-verifier.verify_quadratic(1, -5, 6, [2, 3])  # 验证 x=2 和 x=3
+# Python示例 - 验证功能自动执行
+solution = SymbolicSolver.solve_quadratic(1, -5, 6, verbose=True)
+# 验证结果会在求解步骤后自动显示
 ```
 
 ```java
@@ -231,7 +238,8 @@ QuadraticVerifier.verify(1, -5, 6, new Complex[]{new Complex(2), new Complex(3)}
 
 - **实数**: `3.0` 或 `-2.5`
 - **复数**: `1.0 + 2.0i` 或 `-1.5 - 0.5i`
-- **精确表达式**: `(5 + √1)/2` 或 `(-2 + 4i)/2`
+- **精确符号解**: Python版本使用SymPy返回精确的符号表达式
+- **Markdown导出**: 求解过程自动导出为带LaTeX公式的Markdown文件
 
 ### 验证结果
 
@@ -245,7 +253,7 @@ QuadraticVerifier.verify(1, -5, 6, new Complex[]{new Complex(2), new Complex(3)}
 
 ### Python版本
 
-**问题**: `ModuleNotFoundError: No module named 'numpy'`
+**问题**: `ModuleNotFoundError: No module named 'sympy'`
 ```
 解决: 安装依赖
 pip install -r requirements.txt

@@ -8,13 +8,13 @@
 
 **核心文件**:
 - `src/equation_solver.py` - 求解器核心逻辑
-  - `ComplexNumber` - 复数类
-  - `EquationSolver` - 静态方法求解各类方程
+  - `SymbolicSolver` - 符号求解器（使用SymPy）
+  - `MarkdownExporter` - Markdown导出器
   - `EquationSolution` - 解的封装
 
-- `src/verifier.py` - 验证器
-  - `SolutionVerifier` - 验算逻辑
-  - `VerificationResult` - 验证结果封装
+- `src/main.py` - 主程序
+  - 交互式CLI界面
+  - 内置验证功能
 
 **运行方式**:
 ```bash
@@ -24,18 +24,26 @@ python3 src/main.py
 
 **示例代码**:
 ```python
-from src.equation_solver import EquationSolver
-from src.verifier import SolutionVerifier
+from src.equation_solver import SymbolicSolver, MarkdownExporter
 
-# 求解并验证
-solution = EquationSolver.solve_quadratic(1, -5, 6)
-verifier = SolutionVerifier()
-results = verifier.verify_quadratic(1, -5, 6, solution.roots)
+# 求解二次方程
+solution = SymbolicSolver.solve_quadratic(1, -5, 6, verbose=True)
 
-# 打印详细步骤
-EquationSolver.print_solution(solution)
-verifier.print_verification_results(results)
+# 求解三次方程
+solution = SymbolicSolver.solve_cubic(1, -6, 11, -6, verbose=True)
+
+# 求解四次方程
+solution = SymbolicSolver.solve_quartic(1, 0, -5, 0, 4, verbose=True)
+
+# 导出为Markdown文件
+MarkdownExporter.export_solution(solution, "solution.md")
 ```
+
+**说明**：
+- 使用SymPy进行符号计算，返回精确解
+- `verbose=True` 会打印详细的求解步骤
+- 验证功能已内置，求解后自动验证
+- 结果自动保存到 `solutions/` 目录下的Markdown文件
 
 ---
 
@@ -74,15 +82,16 @@ boolean verified = QuadraticVerifier.verify(1, -5, 6, roots);
 
 | 特性 | Python版本 | Java版本 |
 |------|-----------|---------|
-| **复数支持** | `ComplexNumber`类 | `Complex`类 |
-| **求解器结构** | 静态方法集 | 独立类 |
-| **验证器结构** | 统一类 | 各类型独立类 |
-| **依赖** | NumPy | 无外部依赖 |
+| **复数支持** | SymPy内置复数 | `Complex`类 |
+| **求解器结构** | `SymbolicSolver`类 | 独立类 |
+| **验证器结构** | 内置验证 | 各类型独立类 |
+| **依赖** | SymPy | 无外部依赖 |
 | **构建工具** | pip | Maven |
 | **测试框架** | pytest | 手动测试用例 |
-| **代码行数** | ~500行 | ~800行 |
-| **精确表达式** | 支持 | 支持 |
+| **代码行数** | ~700行 | ~800行 |
+| **精确表达式** | SymPy符号计算 | 支持 |
 | **详细步骤** | 支持 | 支持 |
+| **Markdown导出** | 支持 | 不支持 |
 
 ---
 

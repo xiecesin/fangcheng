@@ -32,20 +32,21 @@
 
 文件结构:
 ├── src/
-│   ├── equation_solver.py (648行) - 核心求解器
-│   ├── verifier.py (254行)        - 解的验证器
-│   └── main.py (92行)             - 主程序入口
+│   ├── equation_solver.py (673行) - 符号求解器核心（使用SymPy）
+│   ├── verifier.py (158行)        - 解的验证器（保留）
+│   └── main.py (199行)            - 主程序（交互式CLI，内置验证）
+├── solutions/                       - 自动生成的Markdown求解结果
 ├── tests/
 │   └── test_solver.py (241行)     - 单元测试
-├── requirements.txt                   - 依赖文件
-├── run.sh                             - 运行脚本
-└── README.md                          - 项目文档
+├── requirements.txt                 - 依赖文件
+├── run.sh                           - 运行脚本
+└── README.md                        - 项目文档
 
 核心类:
-1. ComplexNumber - 复数类，支持基本运算
-2. EquationSolver - 静态方法求解器
-3. EquationSolution - 解的封装
-4. SolutionVerifier - 验证器
+1. SymbolicSolver - 符号求解器，提供详细的手推步骤
+2. MarkdownExporter - Markdown导出器，支持LaTeX公式
+3. EquationSolution - 解的封装（包含步骤、LaTeX公式、Markdown内容）
+4. SolutionVerifier - 验证器（保留，用于程序化验证）
 5. VerificationResult - 验证结果
 
 运行方式:
@@ -56,10 +57,10 @@
 
 依赖:
   - Python 3.8+
-  - NumPy
-  - pytest (测试)
+  - SymPy（符号计算）
+  - pytest（测试）
 
-代码总量: ~1,235行
+代码总量: ~1,200+行
 
 ================================================================================
                         三、Java版本工程详情

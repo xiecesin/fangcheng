@@ -6,11 +6,12 @@
 
 ```
 fangcheng/
-├── python-version/      # Python版本工程
+├── python-version/      # Python版本工程（SymPy符号计算）
 │   ├── src/
-│   │   ├── equation_solver.py  # 求解器核心
-│   │   ├── verifier.py         # 验算器
-│   │   └── main.py             # 主程序
+│   │   ├── equation_solver.py  # 符号求解器核心
+│   │   ├── verifier.py         # 验算器（保留）
+│   │   └── main.py             # 主程序（交互式CLI）
+│   ├── solutions/              # 自动生成的求解结果
 │   ├── tests/                  # 测试文件
 │   ├── requirements.txt        # Python依赖
 │   ├── run.sh                  # 运行脚本
@@ -117,11 +118,11 @@ java -jar target/equation-solver-1.0.0.jar
 ## 技术特点
 
 ### Python版本
-- 面向对象设计，清晰的类层次结构
-- 完整的错误处理和边界情况处理
-- 支持精确数学表达式格式化
-- 包含单元测试和集成测试
-- 使用NumPy进行数值计算
+- **符号计算**：使用SymPy进行符号计算，返回精确解
+- **Markdown导出**：自动将求解过程导出为带LaTeX公式的Markdown文件
+- **交互式CLI**：支持中英文逗号和空格分隔的系数输入
+- **内置验证**：求解后自动验证所有根的正确性
+- **详细步骤**：显示完整的数学推导过程
 
 ### Java版本
 - 完整的复数类实现
@@ -139,7 +140,7 @@ java -jar target/equation-solver-1.0.0.jar
 
 ## 系统要求
 
-- **Python版本**: Python 3.8+，NumPy
+- **Python版本**: Python 3.8+，SymPy
 - **Java版本**: Java 11+，Maven 3.6+
 
 ## 许可证
