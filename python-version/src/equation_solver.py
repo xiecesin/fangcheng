@@ -1,1062 +1,471 @@
 """
-Equation Solver Module
-Provides detailed solvers for quadratic, cubic, and quartic equations
-with step-by-step solution display and exact expression support.
+方程求解器模块
+使用 sympy 库求解二次、三次和四次方程，提供详细的分步解决方案
 """
 
-from __future__ import annotations
-from dataclasses import dataclass
+from sympy import symbols, solve, sqrt, cbrt, I, pi, simplify, expand, factor, Rational, pprint, latex
+from sympy.abc import x
 from typing import List, Union, Optional, Tuple
-import math
-import cmath
-from fractions import Fraction
-from decimal import Decimal, getcontext
-
-# Set high precision for decimal calculations
-getcontext().prec = 50
+from dataclasses import dataclass
+import sympy
 
 
-@dataclass(frozen=True)
-class SymbolicExpression:
-    """Represents a symbolic mathematical expression."""
-    value: Union[float, str, Tuple]
-    
-    # Static factory methods for creating expressions
-    @staticmethod
-    def add(left: Union[float, SymbolicExpression], right: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing left + right."""
-        left_val = left.value if isinstance(left, SymbolicExpression) else left
-        right_val = right.value if isinstance(right, SymbolicExpression) else right
-        return SymbolicExpression((left_val, '+', right_val))
-    
-    @staticmethod
-    def subtract(left: Union[float, SymbolicExpression], right: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing left - right."""
-        left_val = left.value if isinstance(left, SymbolicExpression) else left
-        right_val = right.value if isinstance(right, SymbolicExpression) else right
-        return SymbolicExpression((left_val, '-', right_val))
-    
-    @staticmethod
-    def multiply(left: Union[float, SymbolicExpression], right: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing left * right."""
-        left_val = left.value if isinstance(left, SymbolicExpression) else left
-        right_val = right.value if isinstance(right, SymbolicExpression) else right
-        return SymbolicExpression((left_val, '*', right_val))
-    
-    @staticmethod
-    def divide(left: Union[float, SymbolicExpression], right: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing left / right."""
-        left_val = left.value if isinstance(left, SymbolicExpression) else left
-        right_val = right.value if isinstance(right, SymbolicExpression) else right
-        return SymbolicExpression((left_val, '/', right_val))
-    
-    @staticmethod
-    def power(base: Union[float, SymbolicExpression], exponent: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing base ^ exponent."""
-        base_val = base.value if isinstance(base, SymbolicExpression) else base
-        exponent_val = exponent.value if isinstance(exponent, SymbolicExpression) else exponent
-        return SymbolicExpression((base_val, '^', exponent_val))
-    
-    @staticmethod
-    def sqrt(arg: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing sqrt(arg)."""
-        arg_val = arg.value if isinstance(arg, SymbolicExpression) else arg
-        return SymbolicExpression(('sqrt', arg_val))
-    
-    @staticmethod
-    def cbrt(arg: Union[float, SymbolicExpression]) -> SymbolicExpression:
-        """Create a symbolic expression representing cube root of arg."""
-        arg_val = arg.value if isinstance(arg, SymbolicExpression) else arg
-        return SymbolicExpression(('cbrt', arg_val))
-    
-    def __str__(self) -> str:
-        if isinstance(self.value, tuple):
-            # Handle special unary operators first
-            if self.value[0] == 'sqrt':
-                arg = self.value[1]
-                arg_str = self._format_value(arg)
-                return f"√({arg_str})"
-            elif self.value[0] == 'cbrt':
-                arg = self.value[1]
-                arg_str = self._format_value(arg)
-                return f"∛({arg_str})"
-            # Binary operators
-            else:
-                left, op, right = self.value
-                left_str = self._format_value(left)
-                right_str = self._format_value(right)
-                
-                if op == '^':
-                    if isinstance(right, float) and right == 2:
-                        return f"{left_str}²"
-                    elif isinstance(right, float) and right == 3:
-                        return f"{left_str}³"
-                    return f"{left_str}^{right_str}"
-                else:
-                    # Simplify parentheses for simple expressions
-                    if self._is_simple(left) and self._is_simple(right):
-                        return f"{left_str} {op} {right_str}"
-                    return f"({left_str} {op} {right_str})"
-        elif isinstance(self.value, str):
-            return self.value
-        else:
-            return self._format_value(self.value)
-    
-    def _format_value(self, val) -> str:
-        """Format a value for display, using integer format for whole numbers."""
-        if isinstance(val, (float, int)):
-            if abs(val - round(val)) < 1e-10:
-                return f"{int(round(val))}"
-            else:
-                return f"{val:.6g}"
-        else:
-            return str(val)
-    
-    def _is_simple(self, val) -> bool:
-        """Check if a value is simple (not a tuple expression)."""
-        return not isinstance(val, tuple)
-
-    def evaluate(self) -> float:
-        """Evaluate the symbolic expression numerically."""
-        if isinstance(self.value, tuple):
-            # Handle special unary operators first
-            if self.value[0] == 'sqrt':
-                arg = self.value[1]
-                arg_val = arg if isinstance(arg, (float, int)) else SymbolicExpression(arg).evaluate()
-                return math.sqrt(arg_val)
-            elif self.value[0] == 'cbrt':
-                arg = self.value[1]
-                arg_val = arg if isinstance(arg, (float, int)) else SymbolicExpression(arg).evaluate()
-                return math.pow(arg_val, 1/3)
-            # Binary operators
-            else:
-                left, op, right = self.value
-                
-                left_val = left if isinstance(left, (float, int)) else SymbolicExpression(left).evaluate()
-                right_val = right if isinstance(right, (float, int)) else SymbolicExpression(right).evaluate()
-                
-                if op == '+':
-                    return left_val + right_val
-                elif op == '-':
-                    return left_val - right_val
-                elif op == '*':
-                    return left_val * right_val
-                elif op == '/':
-                    return left_val / right_val
-                elif op == '^':
-                    return math.pow(left_val, right_val)
-        return float(self.value)
-
-
-@dataclass(frozen=True)
-class ComplexNumber:
-    """Represents a complex number with real and imaginary parts."""
-    real: float
-    imag: float
-
-    def __str__(self) -> str:
-        if self.imag == 0:
-            return f"{self.real:.6g}"
-        elif self.real == 0:
-            if self.imag == 1:
-                return "i"
-            elif self.imag == -1:
-                return "-i"
-            else:
-                return f"{self.imag:.6g}i"
-        else:
-            if self.imag == 1:
-                return f"{self.real:.6g} + i"
-            elif self.imag == -1:
-                return f"{self.real:.6g} - i"
-            elif self.imag > 0:
-                return f"{self.real:.6g} + {self.imag:.6g}i"
-            else:
-                return f"{self.real:.6g} - {abs(self.imag):.6g}i"
-
-    def __repr__(self) -> str:
-        return f"ComplexNumber({self.real}, {self.imag})"
-
-
-@dataclass(frozen=True)
-class SolutionStep:
-    """Represents a step in the solution process."""
-    description: str
-    formula: str
-    result: str
-
-
-@dataclass(frozen=True)
+@dataclass
 class EquationSolution:
-    """Represents the complete solution to an equation."""
-    roots: List[Union[float, ComplexNumber]]
-    steps: List[SolutionStep]
+    """存储方程的解和详细信息"""
     equation_type: str
-    coefficients: List[float]
+    coefficients: List[Union[int, float, sympy.Basic]]
+    roots: List[sympy.Basic]
+    steps: List[str]
+    exact_form: bool = True
 
 
-class QuadraticSolver:
-    """Solver for quadratic equations of the form ax² + bx + c = 0."""
-
-    def __init__(self, a: float, b: float, c: float):
-        if a == 0:
-            raise ValueError("Coefficient 'a' cannot be zero for quadratic equation")
-        self.a = a
-        self.b = b
-        self.c = c
-        self.steps: List[SolutionStep] = []
-
-    def solve(self) -> EquationSolution:
-        """Solve the quadratic equation and return detailed solution."""
-        self.steps = []
-
-        # Step 1: Display the equation
-        equation_str = self._format_equation()
-        self.steps.append(SolutionStep(
-            "原方程",
-            equation_str,
-            ""
-        ))
-
-        # Step 2: Calculate discriminant
-        discriminant = self.b**2 - 4 * self.a * self.c
-        self.steps.append(SolutionStep(
-            "计算判别式",
-            f"D = b² - 4ac = ({self.b})² - 4({self.a})({self.c})",
-            f"D = {discriminant:.6g}"
-        ))
-
-        # Step 3: Apply quadratic formula
-        if discriminant >= 0:
-            sqrt_d = math.sqrt(discriminant)
-            root1 = (-self.b + sqrt_d) / (2 * self.a)
-            root2 = (-self.b - sqrt_d) / (2 * self.a)
-            self.steps.append(SolutionStep(
-                "应用二次公式",
-                "x = (-b ± √D) / (2a)",
-                f"x₁ = {root1:.6g}, x₂ = {root2:.6g}"
-            ))
-            roots = [root1, root2]
-        else:
-            sqrt_d = cmath.sqrt(discriminant)
-            root1 = (-self.b + sqrt_d) / (2 * self.a)
-            root2 = (-self.b - sqrt_d) / (2 * self.a)
-            complex_root1 = ComplexNumber(root1.real, root1.imag)
-            complex_root2 = ComplexNumber(root2.real, root2.imag)
-            self.steps.append(SolutionStep(
-                "应用二次公式 (复根)",
-                "x = (-b ± √D) / (2a)",
-                f"x₁ = {complex_root1}, x₂ = {complex_root2}"
-            ))
-            roots = [complex_root1, complex_root2]
-
+class SymbolicSolver:
+    """符号方程求解器，提供详细的手推步骤"""
+    
+    @staticmethod
+    def format_expr(expr: sympy.Basic) -> str:
+        """格式化 sympy 表达式为易读的字符串"""
+        return sympy.srepr(expr)
+    
+    @staticmethod
+    def print_step(step: str, title: str = ""):
+        """打印一个步骤"""
+        if title:
+            print(f"\n{'='*60}")
+            print(f"{title}")
+            print(f"{'='*60}")
+        print(step)
+        print()
+    
+    @staticmethod
+    def solve_quadratic(a: Union[int, float, sympy.Basic], 
+                       b: Union[int, float, sympy.Basic], 
+                       c: Union[int, float, sympy.Basic],
+                       verbose: bool = True) -> EquationSolution:
+        """
+        求解二次方程 ax² + bx + c = 0
+        详细显示求根公式的推导过程
+        """
+        steps = []
+        
+        # 转换为 sympy 符号
+        a = sympy.sympify(a)
+        b = sympy.sympify(b)
+        c = sympy.sympify(c)
+        
+        if verbose:
+            print("\n" + "="*70)
+            print("二次方程求解：ax² + bx + c = 0")
+            print("="*70)
+            
+            # 步骤 1: 写出方程
+            step1 = f"步骤 1: 写出标准形式的二次方程"
+            print(f"\n{step1}")
+            print(f"  {a}x² + {b}x + {c} = 0")
+            steps.append(step1)
+            
+            # 步骤 2: 确认系数
+            step2 = f"步骤 2: 确认系数"
+            print(f"\n{step2}")
+            print(f"  a = {a}")
+            print(f"  b = {b}")
+            print(f"  c = {c}")
+            steps.append(step2)
+            
+            # 步骤 3: 计算判别式
+            step3 = f"步骤 3: 计算判别式 Δ = b² - 4ac"
+            print(f"\n{step3}")
+            delta_expr = b**2 - 4*a*c
+            print(f"  Δ = ({b})² - 4×({a})×({c})")
+            print(f"  Δ = {b**2} - {4*a*c}")
+            print(f"  Δ = {simplify(delta_expr)}")
+            steps.append(step3)
+            
+            # 步骤 4: 判断根的情况
+            step4 = f"步骤 4: 根据判别式判断根的情况"
+            print(f"\n{step4}")
+            delta_val = sympy.N(delta_expr)
+            if delta_val.is_real:
+                if delta_val > 0:
+                    print(f"  Δ = {simplify(delta_expr)} > 0，方程有两个不相等的实根")
+                elif delta_val == 0:
+                    print(f"  Δ = {simplify(delta_expr)} = 0，方程有两个相等的实根（重根）")
+                else:
+                    print(f"  Δ = {simplify(delta_expr)} < 0，方程有一对共轭复根")
+            else:
+                print(f"  Δ = {simplify(delta_expr)}")
+            steps.append(step4)
+            
+            # 步骤 5: 应用求根公式
+            step5 = f"步骤 5: 应用求根公式"
+            print(f"\n{step5}")
+            print(f"  求根公式：x = (-b ± √Δ) / (2a)")
+            print(f"  代入系数：")
+            print(f"  x = (-({b}) ± √({simplify(delta_expr)})) / (2×{a})")
+            print(f"  x = ({-b} ± √({simplify(delta_expr)})) / ({2*a})")
+            steps.append(step5)
+            
+            # 步骤 6: 计算根
+            step6 = f"步骤 6: 计算最终结果"
+            print(f"\n{step6}")
+        
+        # 使用求根公式计算
+        sqrt_delta = sqrt(delta_expr)
+        x1 = (-b + sqrt_delta) / (2*a)
+        x2 = (-b - sqrt_delta) / (2*a)
+        
+        # 化简结果
+        x1_simplified = simplify(x1)
+        x2_simplified = simplify(x2)
+        
+        if verbose:
+            print(f"  x₁ = {x1_simplified}")
+            print(f"  x₂ = {x2_simplified}")
+            
+            # 步骤 7: 数值近似（如果有符号表达式）
+            step7 = f"步骤 7: 数值近似值"
+            print(f"\n{step7}")
+            print(f"  x₁ ≈ {sympy.N(x1_simplified, 6)}")
+            print(f"  x₂ ≈ {sympy.N(x2_simplified, 6)}")
+            steps.append(step7)
+            
+            print("="*70)
+        
+        roots = [x1_simplified, x2_simplified]
         return EquationSolution(
+            equation_type="quadratic",
+            coefficients=[a, b, c],
             roots=roots,
-            steps=self.steps,
-            equation_type="Quadratic",
-            coefficients=[self.a, self.b, self.c]
+            steps=steps,
+            exact_form=True
         )
-
-    def _format_equation(self) -> str:
-        """Format the quadratic equation as a string."""
-        terms = []
-        if self.a != 0:
-            if self.a == 1:
-                terms.append("x²")
-            elif self.a == -1:
-                terms.append("-x²")
-            else:
-                terms.append(f"{self.a}x²")
-
-        if self.b != 0:
-            if self.b == 1:
-                if terms:
-                    terms.append("+ x")
+    
+    @staticmethod
+    def solve_cubic(a: Union[int, float, sympy.Basic],
+                   b: Union[int, float, sympy.Basic],
+                   c: Union[int, float, sympy.Basic],
+                   d: Union[int, float, sympy.Basic],
+                   verbose: bool = True) -> EquationSolution:
+        """
+        求解三次方程 ax³ + bx² + cx + d = 0
+        使用卡尔达诺公式，详细显示手推步骤
+        """
+        steps = []
+        
+        # 转换为 sympy 符号
+        a = sympy.sympify(a)
+        b = sympy.sympify(b)
+        c = sympy.sympify(c)
+        d = sympy.sympify(d)
+        
+        if verbose:
+            print("\n" + "="*70)
+            print("三次方程求解：ax³ + bx² + cx + d = 0（卡尔达诺公式）")
+            print("="*70)
+            
+            # 步骤 1: 写出方程
+            step1 = "步骤 1: 写出标准形式的三次方程"
+            print(f"\n{step1}")
+            print(f"  {a}x³ + {b}x² + {c}x + {d} = 0")
+            steps.append(step1)
+            
+            # 步骤 2: 确认系数
+            step2 = "步骤 2: 确认系数"
+            print(f"\n{step2}")
+            print(f"  a = {a}")
+            print(f"  b = {b}")
+            print(f"  c = {c}")
+            print(f"  d = {d}")
+            steps.append(step2)
+            
+            # 步骤 3: 化为首一多项式
+            step3 = "步骤 3: 两边除以首项系数，化为首一多项式"
+            print(f"\n{step3}")
+            print(f"  x³ + ({b}/{a})x² + ({c}/{a})x + ({d}/{a}) = 0")
+            b_a = b/a
+            c_a = c/a
+            d_a = d/a
+            print(f"  x³ + {simplify(b_a)}x² + {simplify(c_a)}x + {simplify(d_a)} = 0")
+            steps.append(step3)
+            
+            # 步骤 4: 消去二次项
+            step4 = "步骤 4: 通过变量代换消去二次项"
+            print(f"\n{step4}")
+            print(f"  令 x = y - b/(3a)")
+            p = c_a - b_a**2/3
+            q = 2*b_a**3/27 - b_a*c_a/3 + d_a
+            print(f"  计算 p 和 q：")
+            print(f"  p = c/a - b²/(3a²) = {simplify(c_a)} - {simplify(b_a**2/3)} = {simplify(p)}")
+            print(f"  q = 2b³/(27a³) - bc/(3a²) + d/a")
+            print(f"    = {simplify(2*b_a**3/27)} - {simplify(b_a*c_a/3)} + {simplify(d_a)}")
+            print(f"    = {simplify(q)}")
+            print(f"  得到简化形式：y³ + py + q = 0")
+            print(f"  即：y³ + {simplify(p)}y + {simplify(q)} = 0")
+            steps.append(step4)
+            
+            # 步骤 5: 计算判别式
+            step5 = "步骤 5: 计算判别式"
+            print(f"\n{step5}")
+            discriminant = (q/2)**2 + (p/3)**3
+            print(f"  Δ = (q/2)² + (p/3)³")
+            print(f"  Δ = ({simplify(q)}/2)² + ({simplify(p)}/3)³")
+            print(f"  Δ = ({simplify(q/2)})² + ({simplify(p/3)})³")
+            print(f"  Δ = {simplify((q/2)**2)} + {simplify((p/3)**3)}")
+            print(f"  Δ = {simplify(discriminant)}")
+            
+            disc_val = sympy.N(discriminant)
+            if disc_val.is_real:
+                if disc_val > 0:
+                    print(f"  Δ > 0，方程有一个实根和两个共轭复根")
+                elif disc_val == 0:
+                    print(f"  Δ = 0，方程有三个实根（至少两个相等）")
                 else:
-                    terms.append("x")
-            elif self.b == -1:
-                terms.append("- x")
-            else:
-                if terms and self.b > 0:
-                    terms.append(f"+ {self.b}x")
-                else:
-                    terms.append(f"{self.b}x")
-
-        if self.c != 0:
-            if terms and self.c > 0:
-                terms.append(f"+ {self.c}")
-            else:
-                terms.append(f"{self.c}")
-
-        if not terms:
-            return "0 = 0"
-
-        return " ".join(terms) + " = 0"
-
-
-class CubicSolver:
-    """Solver for cubic equations of the form ax³ + bx² + cx + d = 0."""
-
-    def __init__(self, a: float, b: float, c: float, d: float):
-        if a == 0:
-            raise ValueError("Coefficient 'a' cannot be zero for cubic equation")
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
-        self.steps: List[SolutionStep] = []
-
-    def solve(self) -> EquationSolution:
-        """Solve the cubic equation using Cardano's method."""
-        self.steps = []
-
-        # Step 1: Display the equation
-        equation_str = self._format_equation()
-        self.steps.append(SolutionStep(
-            "原方程",
-            equation_str,
-            ""
-        ))
-
-        # Create symbolic expressions for original coefficients
-        symbol_a = SymbolicExpression(self.a)
-        symbol_b = SymbolicExpression(self.b)
-        symbol_c = SymbolicExpression(self.c)
-        symbol_d = SymbolicExpression(self.d)
-
-        # Step 2: Normalize to monic polynomial (divide by a)
-        if self.a != 1:
-            b_norm = self.b / self.a
-            c_norm = self.c / self.a
-            d_norm = self.d / self.a
+                    print(f"  Δ < 0，方程有三个不相等的实根（需要用三角函数表示）")
+            steps.append(step5)
             
-            # Symbolic expressions for normalized coefficients
-            symbol_b_norm = SymbolicExpression.divide(symbol_b, symbol_a)
-            symbol_c_norm = SymbolicExpression.divide(symbol_c, symbol_a)
-            symbol_d_norm = SymbolicExpression.divide(symbol_d, symbol_a)
+            # 步骤 6: 应用卡尔达诺公式
+            step6 = "步骤 6: 应用卡尔达诺公式求解 y"
+            print(f"\n{step6}")
+            print(f"  卡尔达诺公式：")
+            print(f"  y = ∛(-q/2 + √Δ) + ∛(-q/2 - √Δ)")
+            print(f"  ")
+            print(f"  计算 u = ∛(-q/2 + √Δ)：")
+            print(f"  u = ∛(-{simplify(q)}/2 + √({simplify(discriminant)}))")
+            print(f"  u = ∛({simplify(-q/2)} + {simplify(sqrt(discriminant))})")
+            print(f"  ")
+            print(f"  计算 v = ∛(-q/2 - √Δ)：")
+            print(f"  v = ∛(-{simplify(q)}/2 - √({simplify(discriminant)}))")
+            print(f"  v = ∛({simplify(-q/2)} - {simplify(sqrt(discriminant))})")
+            steps.append(step6)
             
-            self.steps.append(SolutionStep(
-                "归一化为首一多项式",
-                f"除以 a = {self.a}",
-                f"x³ + ({symbol_b_norm})x² + ({symbol_c_norm})x + ({symbol_d_norm}) = 0"
-            ))
-        else:
-            b_norm = self.b
-            c_norm = self.c
-            d_norm = self.d
+            # 步骤 7: 计算 y 的三个根
+            step7 = "步骤 7: 计算 y 的三个根"
+            print(f"\n{step7}")
+            print(f"  令 ω = (-1 + √3·i)/2 为三次单位根")
+            print(f"  y₁ = u + v")
+            print(f"  y₂ = ωu + ω²v")
+            print(f"  y₃ = ω²u + ωv")
+            steps.append(step7)
             
-            # Use original coefficients as normalized ones
-            symbol_b_norm = symbol_b
-            symbol_c_norm = symbol_c
-            symbol_d_norm = symbol_d
-
-        # Step 3: Depress the cubic (eliminate x² term)
-        # Substitute x = t - b/(3a)
-        p = c_norm - b_norm**2 / 3
-        q = (2 * b_norm**3) / 27 - (b_norm * c_norm) / 3 + d_norm
+            # 步骤 8: 回代求 x
+            step8 = "步骤 8: 通过 x = y - b/(3a) 求得原方程的根"
+            print(f"\n{step8}")
+            print(f"  x₁ = y₁ - {simplify(b_a/3)}")
+            print(f"  x₂ = y₂ - {simplify(b_a/3)}")
+            print(f"  x₃ = y₃ - {simplify(b_a/3)}")
+            steps.append(step8)
         
-        # Symbolic expressions for p and q using factory methods
-        # p = c_norm - b_norm² / 3
-        symbol_p = SymbolicExpression.subtract(
-            symbol_c_norm,
-            SymbolicExpression.divide(
-                SymbolicExpression.power(symbol_b_norm, 2.0),
-                3.0
-            )
-        )
+        # 使用 sympy 直接求解（保证精确解）
+        equation = a*x**3 + b*x**2 + c*x + d
+        roots = solve(equation, x)
         
-        # q = (2*b_norm³)/27 - (b_norm*c_norm)/3 + d_norm
-        symbol_q = SymbolicExpression.add(
-            SymbolicExpression.subtract(
-                SymbolicExpression.divide(
-                    SymbolicExpression.multiply(2.0, SymbolicExpression.power(symbol_b_norm, 3.0)),
-                    27.0
-                ),
-                SymbolicExpression.divide(
-                    SymbolicExpression.multiply(symbol_b_norm, symbol_c_norm),
-                    3.0
-                )
-            ),
-            symbol_d_norm
-        )
-
-        self.steps.append(SolutionStep(
-            "三次方程降次",
-            "令 x = t - b/3",
-            f"t³ + {symbol_p}t + {symbol_q} = 0"
-        ))
-
-        # Step 4: Calculate discriminant
-        discriminant = (q/2)**2 + (p/3)**3
+        if verbose:
+            # 步骤 9: 显示精确解
+            step9 = "步骤 9: 精确符号解"
+            print(f"\n{step9}")
+            for i, root in enumerate(roots, 1):
+                print(f"  x{i} = {root}")
+            
+            # 步骤 10: 数值近似
+            step10 = "步骤 10: 数值近似值"
+            print(f"\n{step10}")
+            for i, root in enumerate(roots, 1):
+                print(f"  x{i} ≈ {sympy.N(root, 6)}")
+            steps.append(step9)
+            steps.append(step10)
+            
+            print("="*70)
         
-        # Symbolic discriminant using original coefficients
-        # Δ = (q/2)² + (p/3)³
-        symbol_discriminant = SymbolicExpression.add(
-            SymbolicExpression.power(
-                SymbolicExpression.divide(symbol_q, 2.0),
-                2.0
-            ),
-            SymbolicExpression.power(
-                SymbolicExpression.divide(symbol_p, 3.0),
-                3.0
-            )
-        )
-        
-        self.steps.append(SolutionStep(
-            "计算判别式",
-            "Δ = (q/2)² + (p/3)³",
-            f"Δ = {symbol_discriminant}"
-        ))
-
-        # Step 5: Solve based on discriminant
-        shift = -b_norm / 3
-        
-        # Create symbolic expression for shift
-        symbol_shift = SymbolicExpression.divide(
-            SymbolicExpression.subtract(0, symbol_b_norm),
-            3
-        )
-        
-        if abs(discriminant) < 1e-10:  # Δ = 0
-            if abs(p) < 1e-10 and abs(q) < 1e-10:
-                # Triple root
-                t1 = t2 = t3 = 0
-                self.steps.append(SolutionStep(
-                    "三重根情况",
-                    "p = 0, q = 0",
-                    "t₁ = t₂ = t₃ = 0"
-                ))
-            else:
-                # One simple root and one double root
-                t1 = 3 * q / p
-                t2 = t3 = -3 * q / (2 * p)
-                # Create symbolic expressions
-                symbolic_t1 = SymbolicExpression.divide(
-                    SymbolicExpression.multiply(3, symbol_q),
-                    symbol_p
-                )
-                symbolic_t2 = SymbolicExpression.divide(
-                    SymbolicExpression.multiply(-3, symbol_q),
-                    SymbolicExpression.multiply(2, symbol_p)
-                )
-                self.steps.append(SolutionStep(
-                    "二重根情况",
-                    "Δ = 0, p ≠ 0 或 q ≠ 0",
-                    f"t₁ = {symbolic_t1}, t₂ = t₃ = {symbolic_t2}"
-                ))
-            
-            x1 = t1 + shift
-            x2 = t2 + shift
-            x3 = t3 + shift
-            roots = [x1, x2, x3]
-
-        elif discriminant > 0:  # One real root, two complex conjugate roots
-            sqrt_discriminant = math.sqrt(discriminant)
-            u = (-q/2 + sqrt_discriminant)**(1/3)
-            v = (-q/2 - sqrt_discriminant)**(1/3)
-            
-            # Create symbolic expressions based on original coefficients using factory methods
-            symbol_sqrt_discriminant = SymbolicExpression.sqrt(symbol_discriminant)
-            
-            # For u: cube root of (-q/2 + sqrt(discriminant))
-            # -q/2 is equivalent to (0 - q) / 2
-            symbol_minus_q_over_2 = SymbolicExpression.divide(
-                SymbolicExpression.subtract(0, symbol_q),
-                2
-            )
-            
-            symbol_u_arg = SymbolicExpression.add(symbol_minus_q_over_2, symbol_sqrt_discriminant)
-            symbol_u = SymbolicExpression.cbrt(symbol_u_arg)
-            
-            # For v: cube root of (-q/2 - sqrt(discriminant))
-            symbol_v_arg = SymbolicExpression.subtract(symbol_minus_q_over_2, symbol_sqrt_discriminant)
-            symbol_v = SymbolicExpression.cbrt(symbol_v_arg)
-            
-            # For t1: u + v
-            symbolic_t1 = SymbolicExpression.add(symbol_u, symbol_v)
-            
-            t1 = u + v
-            t2 = -(u + v)/2 + (u - v) * math.sqrt(3)/2 * 1j
-            t3 = -(u + v)/2 - (u - v) * math.sqrt(3)/2 * 1j
-
-            self.steps.append(SolutionStep(
-                "一个实根，两个复根",
-                "Δ > 0",
-                f"t₁ = {symbolic_t1} = {t1:.6g}, t₂ = {ComplexNumber(t2.real, t2.imag)}, t₃ = {ComplexNumber(t3.real, t3.imag)}"
-            ))
-
-            # Convert back to x
-            x1 = t1 + shift
-            x2 = ComplexNumber(t2.real + shift, t2.imag)
-            x3 = ComplexNumber(t3.real + shift, t3.imag)
-            roots = [x1, x2, x3]
-
-        else:  # discriminant < 0: Three distinct real roots
-            rho = math.sqrt(-p**3 / 27)
-            theta = math.acos(-q / (2 * rho))
-
-            # Create symbolic expressions for trigonometric solution using original coefficients
-            symbolic_rho = SymbolicExpression.sqrt(
-                SymbolicExpression.subtract(
-                    0, 
-                    SymbolicExpression.power(
-                        SymbolicExpression.divide(symbol_p, 3.0), 
-                        3.0
-                    )
-                )
-            )
-            
-            t1 = 2 * (-p/3)**0.5 * math.cos(theta/3)
-            t2 = 2 * (-p/3)**0.5 * math.cos((theta + 2*math.pi)/3)
-            t3 = 2 * (-p/3)**0.5 * math.cos((theta + 4*math.pi)/3)
-
-            self.steps.append(SolutionStep(
-                "三个不同实根",
-                "Δ < 0 (不可约情况)",
-                f"t₁ = 2∛(ρ)cos(θ/3) = {t1:.6g}, t₂ = 2∛(ρ)cos((θ+2π)/3) = {t2:.6g}, t₃ = 2∛(ρ)cos((θ+4π)/3) = {t3:.6g}\n        其中 ρ = {symbolic_rho} = {rho:.6g}, θ = arccos(-q/(2ρ)) = {theta:.6g}"
-            ))
-
-            # Convert back to x
-            x1 = t1 + shift
-            x2 = t2 + shift
-            x3 = t3 + shift
-            roots = [x1, x2, x3]
-
-        # Add exact expressions step
-        self.steps.append(SolutionStep(
-            "精确表达式",
-            f"x = t - b/(3a) = t + ({symbol_shift})",
-            f"x₁ = {roots[0]:.6g}, x₂ = {roots[1]}, x₃ = {roots[2]}"
-        ))
-
         return EquationSolution(
+            equation_type="cubic",
+            coefficients=[a, b, c, d],
             roots=roots,
-            steps=self.steps,
-            equation_type="Cubic",
-            coefficients=[self.a, self.b, self.c, self.d]
+            steps=steps,
+            exact_form=True
         )
-
-    def _format_equation(self) -> str:
-        """Format the cubic equation as a string."""
-        terms = []
-        if self.a != 0:
-            if self.a == 1:
-                terms.append("x³")
-            elif self.a == -1:
-                terms.append("-x³")
-            else:
-                terms.append(f"{self.a}x³")
-
-        if self.b != 0:
-            if self.b == 1:
-                if terms:
-                    terms.append("+ x²")
-                else:
-                    terms.append("x²")
-            elif self.b == -1:
-                terms.append("- x²")
-            else:
-                if terms and self.b > 0:
-                    terms.append(f"+ {self.b}x²")
-                else:
-                    terms.append(f"{self.b}x²")
-
-        if self.c != 0:
-            if self.c == 1:
-                if terms:
-                    terms.append("+ x")
-                else:
-                    terms.append("x")
-            elif self.c == -1:
-                terms.append("- x")
-            else:
-                if terms and self.c > 0:
-                    terms.append(f"+ {self.c}x")
-                else:
-                    terms.append(f"{self.c}x")
-
-        if self.d != 0:
-            if terms and self.d > 0:
-                terms.append(f"+ {self.d}")
-            else:
-                terms.append(f"{self.d}")
-
-        if not terms:
-            return "0 = 0"
-
-        return " ".join(terms) + " = 0"
-
-
-class QuarticSolver:
-    """Solver for quartic equations of the form ax⁴ + bx³ + cx² + dx + e = 0."""
-
-    def __init__(self, a: float, b: float, c: float, d: float, e: float):
-        if a == 0:
-            raise ValueError("Coefficient 'a' cannot be zero for quartic equation")
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
-        self.e = e
-        self.steps: List[SolutionStep] = []
-
-    def solve(self) -> EquationSolution:
-        """Solve the quartic equation using Ferrari's method."""
-        self.steps = []
-
-        # Step 1: Display the equation
-        equation_str = self._format_equation()
-        self.steps.append(SolutionStep(
-            "原方程",
-            equation_str,
-            ""
-        ))
-
-        # Create symbolic expressions based on original coefficients
-        symbol_a = SymbolicExpression(self.a)
-        symbol_b = SymbolicExpression(self.b)
-        symbol_c = SymbolicExpression(self.c)
-        symbol_d = SymbolicExpression(self.d)
-        symbol_e = SymbolicExpression(self.e)
-
-        # Step 2: Normalize to monic polynomial
-        if self.a != 1:
-            b_norm = self.b / self.a
-            c_norm = self.c / self.a
-            d_norm = self.d / self.a
-            e_norm = self.e / self.a
-            
-            # Symbolic normalized coefficients
-            symbol_b_norm = SymbolicExpression.divide(symbol_b, symbol_a)
-            symbol_c_norm = SymbolicExpression.divide(symbol_c, symbol_a)
-            symbol_d_norm = SymbolicExpression.divide(symbol_d, symbol_a)
-            symbol_e_norm = SymbolicExpression.divide(symbol_e, symbol_a)
-            
-            self.steps.append(SolutionStep(
-            "归一化为首一多项式",
-            f"除以 a = {self.a}",
-            f"x⁴ + {symbol_b_norm}x³ + {symbol_c_norm}x² + {symbol_d_norm}x + {symbol_e_norm} = 0"
-        ))
-        else:
-            b_norm = self.b
-            c_norm = self.c
-            d_norm = self.d
-            e_norm = self.e
-            
-            # Symbolic normalized coefficients (same as original when a=1)
-            symbol_b_norm = symbol_b
-            symbol_c_norm = symbol_c
-            symbol_d_norm = symbol_d
-            symbol_e_norm = symbol_e
-
-        # Step 3: Depress the quartic (eliminate x³ term)
-        # Substitute x = y - b/(4a)
-        p = c_norm - 3 * b_norm**2 / 8
-        q = b_norm**3 / 8 - b_norm * c_norm / 2 + d_norm
-        r = -3 * b_norm**4 / 256 + b_norm**2 * c_norm / 16 - b_norm * d_norm / 4 + e_norm
+    
+    @staticmethod
+    def solve_quartic(a: Union[int, float, sympy.Basic],
+                     b: Union[int, float, sympy.Basic],
+                     c: Union[int, float, sympy.Basic],
+                     d: Union[int, float, sympy.Basic],
+                     e: Union[int, float, sympy.Basic],
+                     verbose: bool = True) -> EquationSolution:
+        """
+        求解四次方程 ax⁴ + bx³ + cx² + dx + e = 0
+        使用费拉里方法，详细显示手推步骤
+        """
+        steps = []
         
-        # Symbolic expressions for p, q, r using original coefficients
-        # p = c_norm - 3b_norm² / 8
-        symbol_p = SymbolicExpression.subtract(
-            symbol_c_norm,
-            SymbolicExpression.divide(
-                SymbolicExpression.multiply(3.0, SymbolicExpression.power(symbol_b_norm, 2.0)),
-                8.0
-            )
-        )
+        # 转换为 sympy 符号
+        a = sympy.sympify(a)
+        b = sympy.sympify(b)
+        c = sympy.sympify(c)
+        d = sympy.sympify(d)
+        e = sympy.sympify(e)
         
-        # q = b_norm³ / 8 - b_norm c_norm / 2 + d_norm
-        symbol_q = SymbolicExpression.add(
-            SymbolicExpression.subtract(
-                SymbolicExpression.divide(SymbolicExpression.power(symbol_b_norm, 3.0), 8.0),
-                SymbolicExpression.divide(SymbolicExpression.multiply(symbol_b_norm, symbol_c_norm), 2.0)
-            ),
-            symbol_d_norm
-        )
-        
-        # r = -3b_norm⁴ / 256 + b_norm² c_norm / 16 - b_norm d_norm / 4 + e_norm
-        symbol_r = SymbolicExpression.add(
-            SymbolicExpression.add(
-                SymbolicExpression.subtract(
-                    SymbolicExpression.divide(SymbolicExpression.multiply(-3.0, SymbolicExpression.power(symbol_b_norm, 4.0)), 256.0),
-                    SymbolicExpression.divide(SymbolicExpression.multiply(SymbolicExpression.power(symbol_b_norm, 2.0), symbol_c_norm), 16.0)
-                ),
-                SymbolicExpression.divide(SymbolicExpression.multiply(-1.0, SymbolicExpression.multiply(symbol_b_norm, symbol_d_norm)), 4.0)
-            ),
-            symbol_e_norm
-        )
-
-        self.steps.append(SolutionStep(
-            "四次方程降次",
-            "令 x = y - b/4",
-            f"y⁴ + {symbol_p}y² + {symbol_q}y + {symbol_r} = 0"
-        ))
-
-        # Step 4: Solve using Ferrari's method
-        # First, check if it's a biquadratic equation (q = 0)
-        if abs(q) < 1e-10:
-            self.steps.append(SolutionStep(
-                "双二次方程情况",
-                "y⁴ + py² + r = 0 (q = 0)",
-                "令 z = y²，得到 z² + pz + r = 0"
-            ))
+        if verbose:
+            print("\n" + "="*70)
+            print("四次方程求解：ax⁴ + bx³ + cx² + dx + e = 0（费拉里方法）")
+            print("="*70)
             
-            # Solve the quadratic equation z² + pz + r = 0
-            quadratic_discriminant = p**2 - 4*1*r
-            sqrt_quad_disc = math.sqrt(abs(quadratic_discriminant))
+            # 步骤 1: 写出方程
+            step1 = "步骤 1: 写出标准形式的四次方程"
+            print(f"\n{step1}")
+            print(f"  {a}x⁴ + {b}x³ + {c}x² + {d}x + {e} = 0")
+            steps.append(step1)
             
-            # Symbolic quadratic discriminant based on original coefficients
-            symbol_quad_discriminant = SymbolicExpression.subtract(
-                SymbolicExpression.power(symbol_p, 2.0),
-                SymbolicExpression.multiply(4.0, SymbolicExpression.multiply(1.0, symbol_r))
-            )
+            # 步骤 2: 确认系数
+            step2 = "步骤 2: 确认系数"
+            print(f"\n{step2}")
+            print(f"  a = {a}")
+            print(f"  b = {b}")
+            print(f"  c = {c}")
+            print(f"  d = {d}")
+            print(f"  e = {e}")
+            steps.append(step2)
             
-            if quadratic_discriminant >= 0:
-                z1 = (-p + sqrt_quad_disc) / 2
-                z2 = (-p - sqrt_quad_disc) / 2
-                
-                # Create symbolic expressions using original coefficients
-                symbol_sqrt_quad_disc = SymbolicExpression.sqrt(symbol_quad_discriminant)
-                symbolic_z1 = SymbolicExpression.divide(
-                    SymbolicExpression.add(SymbolicExpression.subtract(0, symbol_p), symbol_sqrt_quad_disc),
-                    2.0
-                )
-                symbolic_z2 = SymbolicExpression.divide(
-                    SymbolicExpression.subtract(SymbolicExpression.subtract(0, symbol_p), symbol_sqrt_quad_disc),
-                    2.0
-                )
-                
-                # Add steps for quadratic equation solution (similar to Java)
-                self.steps.append(SolutionStep(
-                    "求解二次方程: z² + pz + r = 0",
-                    "步骤1: 计算判别式 D = b² - 4ac",
-                    f"D = {symbol_p}² - 4*1*{symbol_r} = {quadratic_discriminant:.6g}"
-                ))
-                
-                self.steps.append(SolutionStep(
-                    "计算平方根",
-                    "步骤2: 计算 √D",
-                    f"√D = {sqrt_quad_disc:.6g}"
-                ))
-                
-                self.steps.append(SolutionStep(
-                    "应用二次公式",
-                    "步骤3: 应用二次公式 z = (-p ± √D) / (2a)",
-                    f"z₁ = {symbolic_z1} = {z1:.6g}, z₂ = {symbolic_z2} = {z2:.6g}"
-                ))
-                
-                # Solve y² = z1 and y² = z2
-                roots = []
-                for z in [z1, z2]:
-                    if z > 0:
-                        sqrt_z = math.sqrt(z)
-                        roots.extend([sqrt_z, -sqrt_z])
-                    elif z == 0:
-                        roots.extend([0, 0])
-                    else:
-                        sqrt_z = math.sqrt(-z)
-                        roots.append(ComplexNumber(0, sqrt_z))
-                        roots.append(ComplexNumber(0, -sqrt_z))
+            # 步骤 3: 化为首一多项式
+            step3 = "步骤 3: 两边除以首项系数，化为首一多项式"
+            print(f"\n{step3}")
+            print(f"  x⁴ + ({b}/{a})x³ + ({c}/{a})x² + ({d}/{a})x + ({e}/{a}) = 0")
+            b_a = b/a
+            c_a = c/a
+            d_a = d/a
+            e_a = e/a
+            print(f"  x⁴ + {simplify(b_a)}x³ + {simplify(c_a)}x² + {simplify(d_a)}x + {simplify(e_a)} = 0")
+            steps.append(step3)
+            
+            # 步骤 4: 消去三次项
+            step4 = "步骤 4: 通过变量代换消去三次项"
+            print(f"\n{step4}")
+            print(f"  令 x = y - b/(4a)")
+            print(f"  即 x = y - {simplify(b_a/4)}")
+            
+            # 计算简化后的系数
+            p = c_a - 3*b_a**2/8
+            q = b_a**3/8 - b_a*c_a/2 + d_a
+            r = -3*b_a**4/256 + b_a**2*c_a/16 - b_a*d_a/4 + e_a
+            
+            print(f"  代入后得到简化形式：y⁴ + py² + qy + r = 0")
+            print(f"  计算系数：")
+            print(f"  p = c/a - 3b²/(8a²)")
+            print(f"    = {simplify(c_a)} - {simplify(3*b_a**2/8)}")
+            print(f"    = {simplify(p)}")
+            print(f"  q = b³/(8a³) - bc/(2a²) + d/a")
+            print(f"    = {simplify(b_a**3/8)} - {simplify(b_a*c_a/2)} + {simplify(d_a)}")
+            print(f"    = {simplify(q)}")
+            print(f"  r = -3b⁴/(256a⁴) + b²c/(16a²) - bd/(4a) + e/a")
+            print(f"    = {simplify(-3*b_a**4/256)} + {simplify(b_a**2*c_a/16)} - {simplify(b_a*d_a/4)} + {simplify(e_a)}")
+            print(f"    = {simplify(r)}")
+            print(f"  简化方程：y⁴ + {simplify(p)}y² + {simplify(q)}y + {simplify(r)} = 0")
+            steps.append(step4)
+            
+            # 步骤 5: 费拉里的关键思想
+            step5 = "步骤 5: 费拉里方法的核心思想"
+            print(f"\n{step5}")
+            print(f"  将方程重写为：")
+            print(f"  y⁴ + {simplify(p)}y² = -{simplify(q)}y - {simplify(r)}")
+            print(f"  ")
+            print(f"  引入参数 m，两边同时加上 2my² + m²：")
+            print(f"  (y² + m)² = y⁴ + 2my² + m²")
+            print(f"  ")
+            print(f"  原方程变为：")
+            print(f"  (y² + m)² = (2m - p)y² - qy + (m² - r)")
+            steps.append(step5)
+            
+            # 步骤 6: 三次预解方程
+            step6 = "步骤 6: 构造三次预解方程"
+            print(f"\n{step6}")
+            print(f"  为使右边成为完全平方式，其判别式必须为 0：")
+            print(f"  Δ = q² - 4(2m - p)(m² - r) = 0")
+            print(f"  ")
+            print(f"  展开得到关于 m 的三次方程：")
+            print(f"  8m³ - 4pm² - 8rm + (4pr - q²) = 0")
+            
+            # 计算三次预解方程的系数
+            A = 8
+            B = -4*p
+            C = -8*r
+            D = 4*p*r - q**2
+            
+            print(f"  其中：")
+            print(f"  A = 8")
+            print(f"  B = -4p = {simplify(B)}")
+            print(f"  C = -8r = {simplify(C)}")
+            print(f"  D = 4pr - q² = {simplify(D)}")
+            print(f"  ")
+            print(f"  三次预解方程：{simplify(A)}m³ + {simplify(B)}m² + {simplify(C)}m + {simplify(D)} = 0")
+            steps.append(step6)
+            
+            # 步骤 7: 求解三次预解方程
+            step7 = "步骤 7: 求解三次预解方程得到一个根 m"
+            print(f"\n{step7}")
+            print(f"  使用卡尔达诺公式求解 m 的三次方程...")
+            
+            # 解三次预解方程
+            m_equation = A*symbols('m')**3 + B*symbols('m')**2 + C*symbols('m') + D
+            m_roots = solve(m_equation, symbols('m'))
+            
+            if m_roots:
+                m = m_roots[0]  # 取一个实根
+                print(f"  求得 m 的一个根：m = {m}")
+                print(f"  数值近似：m ≈ {sympy.N(m, 6)}")
             else:
-                # Complex roots for z
-                z1 = ComplexNumber(-p/2, sqrt_quad_disc/2)
-                z2 = ComplexNumber(-p/2, -sqrt_quad_disc/2)
-                
-                # Add steps for quadratic equation solution with complex roots
-                self.steps.append(SolutionStep(
-                    "求解二次方程 (复根): z² + pz + r = 0",
-                    "步骤1: 计算判别式 D = b² - 4ac",
-                    f"D = {symbol_p}² - 4*1*{symbol_r} = {quadratic_discriminant:.6g}"
-                ))
-                
-                self.steps.append(SolutionStep(
-                    "计算平方根 (虚数)",
-                    "步骤2: 计算 √D",
-                    f"√D = {sqrt_quad_disc:.6g}i"
-                ))
-                
-                self.steps.append(SolutionStep(
-                    "应用二次公式 (复根)",
-                    "步骤3: 应用二次公式 z = (-p ± √D) / (2a)",
-                    f"z₁ = {z1}, z₂ = {z2}"
-                ))
-                
-                # Solve y² = z1 and y² = z2
-                roots = []
-                for z in [z1, z2]:
-                    # Compute square roots of complex numbers
-                    r = math.sqrt(z.real**2 + z.imag**2)
-                    theta = math.atan2(z.imag, z.real)
-                    
-                    sqrt_r = math.sqrt(r)
-                    half_theta = theta / 2
-                    
-                    root1 = ComplexNumber(sqrt_r * math.cos(half_theta), sqrt_r * math.sin(half_theta))
-                    root2 = ComplexNumber(sqrt_r * math.cos(half_theta + math.pi), sqrt_r * math.sin(half_theta + math.pi))
-                    
-                    roots.extend([root1, root2])
-        else:
-            # General quartic equation (q ≠ 0), use Ferrari's method
-            self.steps.append(SolutionStep(
-                "Ferrari方法求解",
-                "引入参数m，将方程分解为两个二次方程",
-                "y⁴ + py² + qy + r = 0 → (y² + my + n)(y² - my + p + n) = y⁴ + (2n + p)y² + my² + m(p)y + n(p + n)"
-            ))
+                m = symbols('m')
+                print(f"  无法求得精确解，使用符号 m")
+            steps.append(step7)
             
-            # Step 5: Find m by solving the cubic resolvent
-            self.steps.append(SolutionStep(
-                "求解三次预解方程",
-                "m³ + 2pm² + (p² - 4r)m - q² = 0",
-                "寻找实数解m"
-            ))
+            # 步骤 8: 求解两个二次方程
+            step8 = "步骤 8: 求解两个二次方程得到 y 的四个根"
+            print(f"\n{step8}")
+            print(f"  当右边为完全平方式时：")
+            print(f"  (y² + m)² = (√(2m-p)·y - q/(2√(2m-p)))²")
+            print(f"  ")
+            print(f"  开方得到两个二次方程：")
+            print(f"  y² + m = ±(√(2m-p)·y - q/(2√(2m-p)))")
+            print(f"  ")
+            print(f"  整理得：")
+            print(f"  y² - √(2m-p)·y + (m + q/(2√(2m-p))) = 0")
+            print(f"  y² + √(2m-p)·y + (m - q/(2√(2m-p))) = 0")
+            steps.append(step8)
             
-            # Solve the cubic resolvent: m³ + 2pm² + (p² - 4r)m - q² = 0
-            cubic_a = 1.0
-            cubic_b = 2.0 * p
-            cubic_c = p**2 - 4.0 * r
-            cubic_d = -q**2
-            
-            # Create cubic solver and solve for m
-            cubic_solver = CubicSolver(cubic_a, cubic_b, cubic_c, cubic_d)
-            cubic_solution = cubic_solver.solve()
-            
-            # Find a real root for m
-            m = None
-            for root in cubic_solution.roots:
-                if isinstance(root, (int, float)) and abs(root) < 1e10:  # Avoid very large roots
-                    m = root
-                    break
-            if m is None:
-                # If no real root found, use numerical method
-                self.steps.append(SolutionStep(
-                    "三次预解方程无合适实根",
-                    "使用数值方法求解",
-                    ""
-                ))
-                roots = self._numerical_quartic_roots([1, 0, p, q, r])
-            else:
-                self.steps.append(SolutionStep(
-                    "找到预解方程的实根",
-                    "m³ + 2pm² + (p² - 4r)m - q² = 0",
-                    f"m = {m:.6g}"
-                ))
-                
-                # Step 6: Calculate n
-                n = (m**2 + 2*p) / 4 - r / m if m != 0 else (m**2 + 2*p) / 4
-                
-                # Step 7: Form the two quadratic equations
-                # (y² + my + n)(y² - my + (p + 2n)) = 0
-                quadratic1_a = 1.0
-                quadratic1_b = m
-                quadratic1_c = n
-                
-                quadratic2_a = 1.0
-                quadratic2_b = -m
-                quadratic2_c = p + 2*n
-                
-                self.steps.append(SolutionStep(
-                    "分解为两个二次方程",
-                    "(y² + my + n)(y² - my + (p + 2n)) = 0",
-                    f"第一个二次方程: y² + {m:.6g}y + {n:.6g} = 0\n第二个二次方程: y² - {m:.6g}y + {(p + 2*n):.6g} = 0"
-                ))
-                
-                # Step 8: Solve the two quadratic equations
-                roots = []
-                
-                # Solve first quadratic equation
-                quad1_discriminant = quadratic1_b**2 - 4*quadratic1_a*quadratic1_c
-                if quad1_discriminant >= 0:
-                    sqrt_quad1 = math.sqrt(quad1_discriminant)
-                    y1 = (-quadratic1_b + sqrt_quad1) / (2*quadratic1_a)
-                    y2 = (-quadratic1_b - sqrt_quad1) / (2*quadratic1_a)
-                    roots.extend([y1, y2])
-                else:
-                    sqrt_quad1 = math.sqrt(-quad1_discriminant)
-                    y1 = ComplexNumber(-quadratic1_b/(2*quadratic1_a), sqrt_quad1/(2*quadratic1_a))
-                    y2 = ComplexNumber(-quadratic1_b/(2*quadratic1_a), -sqrt_quad1/(2*quadratic1_a))
-                    roots.extend([y1, y2])
-                
-                # Solve second quadratic equation
-                quad2_discriminant = quadratic2_b**2 - 4*quadratic2_a*quadratic2_c
-                if quad2_discriminant >= 0:
-                    sqrt_quad2 = math.sqrt(quad2_discriminant)
-                    y3 = (-quadratic2_b + sqrt_quad2) / (2*quadratic2_a)
-                    y4 = (-quadratic2_b - sqrt_quad2) / (2*quadratic2_a)
-                    roots.extend([y3, y4])
-                else:
-                    sqrt_quad2 = math.sqrt(-quad2_discriminant)
-                    y3 = ComplexNumber(-quadratic2_b/(2*quadratic2_a), sqrt_quad2/(2*quadratic2_a))
-                    y4 = ComplexNumber(-quadratic2_b/(2*quadratic2_a), -sqrt_quad2/(2*quadratic2_a))
-                    roots.extend([y3, y4])
-
-        # Convert back to x = y - b/(4a)
-        shift = -b_norm / 4
-        final_roots = []
-        for root in roots:
-            if isinstance(root, (int, float)):
-                final_roots.append(root + shift)
-            else:  # ComplexNumber
-                final_roots.append(ComplexNumber(root.real + shift, root.imag))
-
-        self.steps.append(SolutionStep(
-            "转换回原变量",
-            "x = y - b/(4a)",
-            ""
-        ))
+            # 步骤 9: 回代求 x
+            step9 = "步骤 9: 通过 x = y - b/(4a) 求得原方程的根"
+            print(f"\n{step9}")
+            print(f"  x = y - {simplify(b_a/4)}")
+            steps.append(step9)
         
-        for i, root in enumerate(final_roots):
-            self.steps.append(SolutionStep(
-                f"最终根 {i+1}",
-                "",
-                f"x{i+1} = {root}"
-            ))
-
+        # 使用 sympy 直接求解（保证精确解）
+        equation = a*x**4 + b*x**3 + c*x**2 + d*x + e
+        roots = solve(equation, x)
+        
+        if verbose:
+            # 步骤 10: 显示精确解
+            step10 = "步骤 10: 精确符号解"
+            print(f"\n{step10}")
+            for i, root in enumerate(roots, 1):
+                print(f"  x{i} = {root}")
+            
+            # 步骤 11: 数值近似
+            step11 = "步骤 11: 数值近似值"
+            print(f"\n{step11}")
+            for i, root in enumerate(roots, 1):
+                print(f"  x{i} ≈ {sympy.N(root, 6)}")
+            steps.append(step10)
+            steps.append(step11)
+            
+            print("="*70)
+        
         return EquationSolution(
-            roots=final_roots,
-            steps=self.steps,
-            equation_type="Quartic",
-            coefficients=[self.a, self.b, self.c, self.d, self.e]
+            equation_type="quartic",
+            coefficients=[a, b, c, d, e],
+            roots=roots,
+            steps=steps,
+            exact_form=True
         )
 
-    def _numerical_quartic_roots(self, coeffs: List[float]) -> List[Union[float, complex]]:
-        """Find roots of quartic equation using numpy-like approach (simplified)."""
-        # This is a simplified numerical approach
-        # In practice, you would use more sophisticated methods
-        try:
-            import numpy as np
-            roots = np.roots(coeffs)
-            result = []
-            for root in roots:
-                if abs(root.imag) < 1e-10:
-                    result.append(float(root.real))
-                else:
-                    result.append(complex(root.real, root.imag))
-            return result
-        except ImportError:
-            # Fallback to basic method for quartic
-            # This is a very simplified approach
-            return self._basic_quartic_fallback(coeffs)
 
-    def _basic_quartic_fallback(self, coeffs: List[float]) -> List[Union[float, complex]]:
-        """Basic fallback method for quartic roots."""
-        # For demonstration purposes, return complex roots
-        # This is not a proper implementation but shows the structure
-        a, b, c, d, e = coeffs
-        # Try to find rational roots using Rational Root Theorem
-        possible_roots = []
-        if e != 0:
-            # Check factors of constant term over factors of leading coefficient
-            for i in range(1, int(abs(e)) + 1):
-                if e % i == 0:
-                    possible_roots.extend([i, -i, e/i, -e/i])
-
-        real_roots = []
-        remaining_coeffs = coeffs[:]
-
-        # This is a very simplified approach
-        # In reality, you'd need a proper numerical solver
-        return [complex(1, 1), complex(1, -1), complex(-1, 1), complex(-1, -1)]
-
-    def _format_equation(self) -> str:
-        """Format the quartic equation as a string."""
-        terms = []
-        if self.a != 0:
-            if self.a == 1:
-                terms.append("x⁴")
-            elif self.a == -1:
-                terms.append("-x⁴")
-            else:
-                terms.append(f"{self.a}x⁴")
-
-        if self.b != 0:
-            if self.b == 1:
-                if terms:
-                    terms.append("+ x³")
-                else:
-                    terms.append("x³")
-            elif self.b == -1:
-                terms.append("- x³")
-            else:
-                if terms and self.b > 0:
-                    terms.append(f"+ {self.b}x³")
-                else:
-                    terms.append(f"{self.b}x³")
-
-        if self.c != 0:
-            if self.c == 1:
-                if terms:
-                    terms.append("+ x²")
-                else:
-                    terms.append("x²")
-            elif self.c == -1:
-                terms.append("- x²")
-            else:
-                if terms and self.c > 0:
-                    terms.append(f"+ {self.c}x²")
-                else:
-                    terms.append(f"{self.c}x²")
-
-        if self.d != 0:
-            if self.d == 1:
-                if terms:
-                    terms.append("+ x")
-                else:
-                    terms.append("x")
-            elif self.d == -1:
-                terms.append("- x")
-            else:
-                if terms and self.d > 0:
-                    terms.append(f"+ {self.d}x")
-                else:
-                    terms.append(f"{self.d}x")
-
-        if self.e != 0:
-            if terms and self.e > 0:
-                terms.append(f"+ {self.e}")
-            else:
-                terms.append(f"{self.e}")
-
-        if not terms:
-            return "0 = 0"
-
-        return " ".join(terms) + " = 0"
-
-
-class EquationSolver:
-    """Main equation solver class that handles different equation types."""
-
-    @staticmethod
-    def solve_quadratic(a: float, b: float, c: float) -> EquationSolution:
-        """Solve quadratic equation ax² + bx + c = 0."""
-        solver = QuadraticSolver(a, b, c)
-        return solver.solve()
-
-    @staticmethod
-    def solve_cubic(a: float, b: float, c: float, d: float) -> EquationSolution:
-        """Solve cubic equation ax³ + bx² + cx + d = 0."""
-        solver = CubicSolver(a, b, c, d)
-        return solver.solve()
-
-    @staticmethod
-    def solve_quartic(a: float, b: float, c: float, d: float, e: float) -> EquationSolution:
-        """Solve quartic equation ax⁴ + bx³ + cx² + dx + e = 0."""
-        solver = QuarticSolver(a, b, c, d, e)
-        return solver.solve()
-
-    @staticmethod
-    def print_solution(solution: EquationSolution) -> None:
-        """Print the detailed solution with steps."""
-        print(f"\n{solution.equation_type}方程求解结果")
-        print("=" * 50)
-
-        for step in solution.steps:
-            if step.description:
-                print(f"\n{step.description}:")
-            if step.formula:
-                print(f"  公式: {step.formula}")
-            if step.result:
-                print(f"  结果: {step.result}")
-
-        print(f"\n最终根:")
-        for i, root in enumerate(solution.roots, 1):
-            print(f"  x{i} = {root}")
+# 为了向后兼容，保留旧的类名
+EquationSolver = SymbolicSolver
