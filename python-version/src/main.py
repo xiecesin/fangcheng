@@ -6,8 +6,8 @@ Provides a command-line interface for solving quadratic, cubic, and quartic equa
 
 import sys
 from typing import List, Union
-from src.equation_solver import EquationSolver, EquationSolution, ComplexNumber
-from src.verifier import SolutionVerifier, VerificationResult
+from equation_solver import EquationSolver, EquationSolution, ComplexNumber
+from verifier import SolutionVerifier, VerificationResult
 
 
 def parse_coefficients(input_str: str) -> List[float]:
