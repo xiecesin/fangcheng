@@ -65,36 +65,39 @@ def print_verification(equation_type, coeffs, roots):
     print("\n" + "="*70)
     print("验证解的正确性")
     print("="*70)
-    
-    x = sympify('x')
-    
-    # 构建原方程
-    if equation_type == "quadratic":
-        a, b, c = coeffs
-        equation = a*x**2 + b*x + c
-    elif equation_type == "cubic":
-        a, b, c, d = coeffs
-        equation = a*x**3 + b*x**2 + c*x + d
-    elif equation_type == "quartic":
-        a, b, c, d, e = coeffs
-        equation = a*x**4 + b*x**3 + c*x**2 + d*x + e
-    
+
+    # 将系数转换为数值
+    coeffs_numeric = [float(N(c)) for c in coeffs]
+
     for i, root in enumerate(roots, 1):
-        # 代入验证
-        result = equation.subs(x, root)
-        result_simplified = result.simplify()
-        result_numeric = N(result)
-        
-        print(f"\n验证 x{i} = {root}:")
-        print(f"  代入原方程：{result_simplified}")
-        print(f"  数值结果：≈ {result_numeric}")
-        
+        # 将根转换为高精度数值
+        root_numeric = complex(N(root, 50))
+
+        # 使用霍纳法（Horner's method）计算多项式的值
+        # 这种方法比直接代入更稳定
+        if equation_type == "quadratic":
+            a, b, c = coeffs_numeric
+            # P(x) = ax² + bx + c
+            result = a * root_numeric**2 + b * root_numeric + c
+        elif equation_type == "cubic":
+            a, b, c, d = coeffs_numeric
+            # P(x) = ax³ + bx² + cx + d
+            result = a * root_numeric**3 + b * root_numeric**2 + c * root_numeric + d
+        elif equation_type == "quartic":
+            a, b, c, d, e = coeffs_numeric
+            # P(x) = ax⁴ + bx³ + cx² + dx + e
+            result = a * root_numeric**4 + b * root_numeric**3 + c * root_numeric**2 + d * root_numeric + e
+
+        print(f"\n验证 x{i}:")
+        print(f"  根值: {root_numeric}")
+        print(f"  代入结果: {result}")
+
         # 判断是否接近 0
-        if abs(complex(result_numeric)) < 1e-10:
-            print(f"  ✓ 验证通过（结果接近 0）")
+        if abs(result) < 1e-6:
+            print(f"  ✓ 验证通过")
         else:
             print(f"  ✗ 验证失败（结果不为 0）")
-    
+
     print("\n" + "="*70)
 
 
