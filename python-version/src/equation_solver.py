@@ -76,9 +76,11 @@ class MarkdownExporter:
                 lines.append(f"### {step_title}")
                 lines.append("")
             
-            # 添加 LaTeX 内容
+            # 添加 LaTeX 内容（换行格式）
             if latex_step:
-                lines.append(f"$$ {latex_step} $$")
+                lines.append("$$")
+                lines.append(latex_step)
+                lines.append("$$")
                 lines.append("")
         
         # 最终结果
@@ -88,14 +90,18 @@ class MarkdownExporter:
         lines.append("")
         
         for i, root in enumerate(solution.roots, 1):
-            lines.append(f"$$ x_{i} = {latex(root)} $$")
+            lines.append("$$")
+            lines.append(f"x_{i} = {latex(root)}")
+            lines.append("$$")
             lines.append("")
         
         lines.append("### 数值近似值")
         lines.append("")
         for i, root in enumerate(solution.roots, 1):
             numeric_val = sympy.N(root, 6)
-            lines.append(f"$$ x_{i} \\approx {latex(numeric_val)} $$")
+            lines.append("$$")
+            lines.append(f"x_{i} \\approx {latex(numeric_val)}")
+            lines.append("$$")
             lines.append("")
         
         # 合并内容
