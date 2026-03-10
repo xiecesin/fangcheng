@@ -14,23 +14,23 @@ public class QuadraticSolver {
      * @return array of two Complex roots
      */
     public static Complex[] solve(double a, double b, double c) {
-        System.out.println("Solving quadratic equation: " + formatEquation(a, b, c));
+        System.out.println("求解二次方程: " + formatEquation(a, b, c));
 
         if (Math.abs(a) < 1e-10) {
-            throw new IllegalArgumentException("Coefficient 'a' cannot be zero for a quadratic equation");
+            throw new IllegalArgumentException("二次方程的系数 'a' 不能为零");
         }
 
-        // Step 1: Calculate discriminant
+        // 步骤1: 计算判别式
         double discriminantValue = b * b - 4 * a * c;
         Complex discriminant = new Complex(discriminantValue);
-        System.out.println("Step 1: Calculate discriminant D = b^2 - 4ac");
+        System.out.println("步骤1: 计算判别式 D = b^2 - 4ac");
         System.out.println("        D = (" + b + ")^2 - 4 * (" + a + ") * (" + c + ") = " + discriminantValue);
 
-        // Step 2: Calculate square root of discriminant
+        // 步骤2: 计算判别式的平方根
         Complex sqrtDiscriminant = discriminant.sqrt();
-        System.out.println("Step 2: Calculate sqrt(D) = " + sqrtDiscriminant);
+        System.out.println("步骤2: 计算 sqrt(D) = " + sqrtDiscriminant);
 
-        // Step 3: Apply quadratic formula
+        // 步骤3: 应用二次公式
         Complex numerator1 = new Complex(-b).add(sqrtDiscriminant);
         Complex numerator2 = new Complex(-b).subtract(sqrtDiscriminant);
         Complex denominator = new Complex(2 * a);
@@ -38,7 +38,7 @@ public class QuadraticSolver {
         Complex root1 = numerator1.divide(denominator);
         Complex root2 = numerator2.divide(denominator);
 
-        System.out.println("Step 3: Apply quadratic formula x = (-b ± sqrt(D)) / (2a)");
+        System.out.println("步骤3: 应用二次公式 x = (-b ± sqrt(D)) / (2a)");
         System.out.println("        x1 = (" + (-b) + " + " + sqrtDiscriminant + ") / " + (2 * a) + " = " + root1);
         System.out.println("        x2 = (" + (-b) + " - " + sqrtDiscriminant + ") / " + (2 * a) + " = " + root2);
 

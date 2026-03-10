@@ -81,7 +81,7 @@ class QuadraticSolver:
         # Step 1: Display the equation
         equation_str = self._format_equation()
         self.steps.append(SolutionStep(
-            "Original equation",
+            "原方程",
             equation_str,
             ""
         ))
@@ -89,7 +89,7 @@ class QuadraticSolver:
         # Step 2: Calculate discriminant
         discriminant = self.b**2 - 4 * self.a * self.c
         self.steps.append(SolutionStep(
-            "Calculate discriminant",
+            "计算判别式",
             f"D = b² - 4ac = ({self.b})² - 4({self.a})({self.c})",
             f"D = {discriminant:.6g}"
         ))
@@ -100,7 +100,7 @@ class QuadraticSolver:
             root1 = (-self.b + sqrt_d) / (2 * self.a)
             root2 = (-self.b - sqrt_d) / (2 * self.a)
             self.steps.append(SolutionStep(
-                "Apply quadratic formula",
+                "应用二次公式",
                 "x = (-b ± √D) / (2a)",
                 f"x₁ = {root1:.6g}, x₂ = {root2:.6g}"
             ))
@@ -112,7 +112,7 @@ class QuadraticSolver:
             complex_root1 = ComplexNumber(root1.real, root1.imag)
             complex_root2 = ComplexNumber(root2.real, root2.imag)
             self.steps.append(SolutionStep(
-                "Apply quadratic formula (complex roots)",
+                "应用二次公式 (复根)",
                 "x = (-b ± √D) / (2a)",
                 f"x₁ = {complex_root1}, x₂ = {complex_root2}"
             ))
@@ -181,7 +181,7 @@ class CubicSolver:
         # Step 1: Display the equation
         equation_str = self._format_equation()
         self.steps.append(SolutionStep(
-            "Original equation",
+            "原方程",
             equation_str,
             ""
         ))
@@ -192,8 +192,8 @@ class CubicSolver:
             c_norm = self.c / self.a
             d_norm = self.d / self.a
             self.steps.append(SolutionStep(
-                "Normalize to monic polynomial",
-                f"Divide by a = {self.a}",
+                "归一化为首一多项式",
+                f"除以 a = {self.a}",
                 f"x³ + {b_norm:.6g}x² + {c_norm:.6g}x + {d_norm:.6g} = 0"
             ))
         else:
@@ -207,15 +207,15 @@ class CubicSolver:
         q = (2 * b_norm**3) / 27 - (b_norm * c_norm) / 3 + d_norm
 
         self.steps.append(SolutionStep(
-            "Depress the cubic",
-            "Substitute x = t - b/3",
+            "三次方程降次",
+            "令 x = t - b/3",
             f"t³ + {p:.6g}t + {q:.6g} = 0"
         ))
 
         # Step 4: Calculate discriminant
         discriminant = (q/2)**2 + (p/3)**3
         self.steps.append(SolutionStep(
-            "Calculate discriminant",
+            "计算判别式",
             "Δ = (q/2)² + (p/3)³",
             f"Δ = {discriminant:.6g}"
         ))
@@ -226,7 +226,7 @@ class CubicSolver:
                 # Triple root
                 t1 = t2 = t3 = 0
                 self.steps.append(SolutionStep(
-                    "Triple root case",
+                    "三重根情况",
                     "p = 0, q = 0",
                     "t₁ = t₂ = t₃ = 0"
                 ))
@@ -235,8 +235,8 @@ class CubicSolver:
                 t1 = 3 * q / p
                 t2 = t3 = -3 * q / (2 * p)
                 self.steps.append(SolutionStep(
-                    "Double root case",
-                    "Δ = 0, p ≠ 0 or q ≠ 0",
+                    "二重根情况",
+                    "Δ = 0, p ≠ 0 或 q ≠ 0",
                     f"t₁ = {t1:.6g}, t₂ = t₃ = {t2:.6g}"
                 ))
         elif discriminant > 0:  # One real root, two complex conjugate roots
@@ -247,7 +247,7 @@ class CubicSolver:
             t3 = -(u + v)/2 - (u - v) * math.sqrt(3)/2 * 1j
 
             self.steps.append(SolutionStep(
-                "One real root, two complex roots",
+                "一个实根，两个复根",
                 "Δ > 0",
                 f"t₁ = {t1:.6g}, t₂ = {ComplexNumber(t2.real, t2.imag)}, t₃ = {ComplexNumber(t3.real, t3.imag)}"
             ))
@@ -268,7 +268,7 @@ class CubicSolver:
             t3 = 2 * (-p/3)**0.5 * math.cos((theta + 4*math.pi)/3)
 
             self.steps.append(SolutionStep(
-                "Three distinct real roots",
+                "三个不同实根",
                 "Δ < 0",
                 f"t₁ = {t1:.6g}, t₂ = {t2:.6g}, t₃ = {t3:.6g}"
             ))
@@ -367,7 +367,7 @@ class QuarticSolver:
         # Step 1: Display the equation
         equation_str = self._format_equation()
         self.steps.append(SolutionStep(
-            "Original equation",
+            "原方程",
             equation_str,
             ""
         ))
@@ -379,10 +379,10 @@ class QuarticSolver:
             d_norm = self.d / self.a
             e_norm = self.e / self.a
             self.steps.append(SolutionStep(
-                "Normalize to monic polynomial",
-                f"Divide by a = {self.a}",
-                f"x⁴ + {b_norm:.6g}x³ + {c_norm:.6g}x² + {d_norm:.6g}x + {e_norm:.6g} = 0"
-            ))
+            "归一化为首一多项式",
+            f"除以 a = {self.a}",
+            f"x⁴ + {b_norm:.6g}x³ + {c_norm:.6g}x² + {d_norm:.6g}x + {e_norm:.6g} = 0"
+        ))
         else:
             b_norm = self.b
             c_norm = self.c
@@ -396,8 +396,8 @@ class QuarticSolver:
         r = -3 * b_norm**4 / 256 + b_norm**2 * c_norm / 16 - b_norm * d_norm / 4 + e_norm
 
         self.steps.append(SolutionStep(
-            "Depress the quartic",
-            "Substitute x = y - b/4",
+            "四次方程降次",
+            "令 x = y - b/4",
             f"y⁴ + {p:.6g}y² + {q:.6g}y + {r:.6g} = 0"
         ))
 
@@ -415,9 +415,9 @@ class QuarticSolver:
                 final_roots.append(root + shift)
 
         self.steps.append(SolutionStep(
-            "Numerical solution",
-            "Using numerical methods for quartic",
-            f"Found {len(final_roots)} roots"
+            "数值解",
+            "使用数值方法求解四次方程",
+            f"找到 {len(final_roots)} 个根"
         ))
 
         return EquationSolution(
@@ -555,17 +555,17 @@ class EquationSolver:
     @staticmethod
     def print_solution(solution: EquationSolution) -> None:
         """Print the detailed solution with steps."""
-        print(f"\n{solution.equation_type} Equation Solution")
+        print(f"\n{solution.equation_type}方程求解结果")
         print("=" * 50)
 
         for step in solution.steps:
             if step.description:
                 print(f"\n{step.description}:")
             if step.formula:
-                print(f"  Formula: {step.formula}")
+                print(f"  公式: {step.formula}")
             if step.result:
-                print(f"  Result: {step.result}")
+                print(f"  结果: {step.result}")
 
-        print(f"\nFinal roots:")
+        print(f"\n最终根:")
         for i, root in enumerate(solution.roots, 1):
             print(f"  x{i} = {root}")

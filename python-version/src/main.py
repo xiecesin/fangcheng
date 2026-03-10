@@ -21,54 +21,54 @@ def parse_coefficients(input_str: str) -> List[float]:
 
 def main():
     """Main program entry point."""
-    print("Equation Solver")
+    print("方程求解器")
     print("=" * 40)
-    print("Solve quadratic, cubic, and quartic equations with detailed steps")
+    print("求解二次、三次和四次方程，并显示详细步骤")
     print()
 
     while True:
-        print("Select equation type:")
-        print("1. Quadratic (ax² + bx + c = 0)")
-        print("2. Cubic (ax³ + bx² + cx + d = 0)")
-        print("3. Quartic (ax⁴ + bx³ + cx² + dx + e = 0)")
-        print("4. Exit")
+        print("选择方程类型:")
+        print("1. 二次方程 (ax² + bx + c = 0)")
+        print("2. 三次方程 (ax³ + bx² + cx + d = 0)")
+        print("3. 四次方程 (ax⁴ + bx³ + cx² + dx + e = 0)")
+        print("4. 退出")
 
-        choice = input("\nEnter your choice (1-4): ").strip()
+        choice = input("\n请输入您的选择 (1-4): ").strip()
 
         if choice == '4':
-            print("Goodbye!")
+            print("再见!")
             break
 
         if choice not in ['1', '2', '3']:
-            print("Invalid choice. Please enter 1, 2, 3, or 4.")
+            print("无效选择。请输入 1, 2, 3 或 4。")
             continue
 
         try:
             if choice == '1':
-                coeffs_input = input("Enter coefficients a, b, c (comma-separated): ")
+                coeffs_input = input("请输入系数 a, b, c (用逗号分隔): ")
                 coeffs = parse_coefficients(coeffs_input)
                 if len(coeffs) != 3:
-                    raise ValueError("Quadratic requires exactly 3 coefficients")
+                    raise ValueError("二次方程需要恰好 3 个系数")
                 a, b, c = coeffs
                 solution = EquationSolver.solve_quadratic(a, b, c)
                 verifier = SolutionVerifier()
                 verification_results = verifier.verify_quadratic(a, b, c, solution.roots)
 
             elif choice == '2':
-                coeffs_input = input("Enter coefficients a, b, c, d (comma-separated): ")
+                coeffs_input = input("请输入系数 a, b, c, d (用逗号分隔): ")
                 coeffs = parse_coefficients(coeffs_input)
                 if len(coeffs) != 4:
-                    raise ValueError("Cubic requires exactly 4 coefficients")
+                    raise ValueError("三次方程需要恰好 4 个系数")
                 a, b, c, d = coeffs
                 solution = EquationSolver.solve_cubic(a, b, c, d)
                 verifier = SolutionVerifier()
                 verification_results = verifier.verify_cubic(a, b, c, d, solution.roots)
 
             elif choice == '3':
-                coeffs_input = input("Enter coefficients a, b, c, d, e (comma-separated): ")
+                coeffs_input = input("请输入系数 a, b, c, d, e (用逗号分隔): ")
                 coeffs = parse_coefficients(coeffs_input)
                 if len(coeffs) != 5:
-                    raise ValueError("Quartic requires exactly 5 coefficients")
+                    raise ValueError("四次方程需要恰好 5 个系数")
                 a, b, c, d, e = coeffs
                 solution = EquationSolver.solve_quartic(a, b, c, d, e)
                 verifier = SolutionVerifier()
@@ -81,9 +81,9 @@ def main():
             verifier.print_verification_results(verification_results)
 
         except ValueError as e:
-            print(f"Input error: {e}")
+            print(f"输入错误: {e}")
         except Exception as e:
-            print(f"Error solving equation: {e}")
+            print(f"解方程时出错: {e}")
 
         print("\n" + "-" * 60 + "\n")
 

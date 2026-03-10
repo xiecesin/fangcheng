@@ -17,27 +17,27 @@ public class QuadraticVerifier {
      * @return true if all roots are verified within tolerance
      */
     public static boolean verify(double a, double b, double c, Complex[] roots) {
-        System.out.println("Verifying quadratic equation solutions:");
-        System.out.println("Original equation: " + formatEquation(a, b, c));
+        System.out.println("验证二次方程解:");
+        System.out.println("原方程: " + formatEquation(a, b, c));
 
         boolean allVerified = true;
         for (int i = 0; i < roots.length; i++) {
             Complex root = roots[i];
-            // Calculate ax^2 + bx + c
+            // 计算 ax^2 + bx + c
             Complex xSquared = root.multiply(root);
             Complex axSquared = new Complex(a).multiply(xSquared);
             Complex bx = new Complex(b).multiply(root);
             Complex result = axSquared.add(bx).add(new Complex(c));
 
             boolean isZero = Math.abs(result.getReal()) < 1e-8 && Math.abs(result.getImaginary()) < 1e-8;
-            System.out.println("Root " + (i + 1) + ": " + root + " → " + result + " = 0? " + isZero);
+            System.out.println("根 " + (i + 1) + ": " + root + " → " + result + " = 0? " + isZero);
 
             if (!isZero) {
                 allVerified = false;
             }
         }
 
-        System.out.println("Verification result: " + (allVerified ? "PASSED" : "FAILED"));
+        System.out.println("验证结果: " + (allVerified ? "通过" : "失败"));
         return allVerified;
     }
 

@@ -19,13 +19,13 @@ public class QuarticVerifier {
      * @return true if all roots are verified within tolerance
      */
     public static boolean verify(double a, double b, double c, double d, double e, Complex[] roots) {
-        System.out.println("Verifying quartic equation solutions:");
-        System.out.println("Original equation: " + formatEquation(a, b, c, d, e));
+        System.out.println("验证四次方程解:");
+        System.out.println("原方程: " + formatEquation(a, b, c, d, e));
 
         boolean allVerified = true;
         for (int i = 0; i < roots.length; i++) {
             Complex root = roots[i];
-            // Calculate ax^4 + bx^3 + cx^2 + dx + e
+            // 计算 ax^4 + bx^3 + cx^2 + dx + e
             Complex xSquared = root.multiply(root);
             Complex xCubed = xSquared.multiply(root);
             Complex xQuartic = xCubed.multiply(root);
@@ -36,14 +36,14 @@ public class QuarticVerifier {
             Complex result = axQuartic.add(bxCubed).add(cxSquared).add(dx).add(new Complex(e));
 
             boolean isZero = Math.abs(result.getReal()) < 1e-8 && Math.abs(result.getImaginary()) < 1e-8;
-            System.out.println("Root " + (i + 1) + ": " + root + " → " + result + " = 0? " + isZero);
+            System.out.println("根 " + (i + 1) + ": " + root + " → " + result + " = 0? " + isZero);
 
             if (!isZero) {
                 allVerified = false;
             }
         }
 
-        System.out.println("Verification result: " + (allVerified ? "PASSED" : "FAILED"));
+        System.out.println("验证结果: " + (allVerified ? "通过" : "失败"));
         return allVerified;
     }
 

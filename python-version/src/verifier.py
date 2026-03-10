@@ -139,20 +139,20 @@ class SolutionVerifier:
 
     def print_verification_results(self, results: List[VerificationResult]) -> None:
         """Print verification results in a formatted way."""
-        print("\nVerification Results")
+        print("\n验证结果")
         print("=" * 40)
 
         all_valid = True
         for result in results:
-            status = "✓ VALID" if result.is_valid else "✗ INVALID"
+            status = "✓ 有效" if result.is_valid else "✗ 无效"
             if result.error_message:
-                print(f"  Root {result.root_index}: {status} - Error: {result.error_message}")
+                print(f"  根 {result.root_index}: {status} - 错误: {result.error_message}")
             else:
-                print(f"  Root {result.root_index}: {status}")
-                print(f"    Root value: {result.root_value}")
-                print(f"    Substituted value: {result.substituted_value}")
+                print(f"  根 {result.root_index}: {status}")
+                print(f"    根值: {result.root_value}")
+                print(f"    代入值: {result.substituted_value}")
 
             if not result.is_valid:
                 all_valid = False
 
-        print(f"\nOverall: {'All solutions verified successfully!' if all_valid else 'Some solutions failed verification!'}")
+        print(f"\n总体结果: {'所有解验证成功！' if all_valid else '部分解验证失败！'}")

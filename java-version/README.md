@@ -1,108 +1,108 @@
-# Java Equation Solver
+# Java方程求解器
 
-A comprehensive Java library for solving polynomial equations of degrees 2, 3, and 4 (quadratic, cubic, and quartic equations). The solver provides detailed step-by-step solutions and includes verification functionality to ensure correctness.
+一个功能全面的Java库，用于求解2次、3次和4次多项式方程（二次、三次和四次方程）。该求解器提供详细的分步解决方案，并包含验证功能以确保正确性。
 
-## Features
+## 功能特性
 
-- **Quadratic Solver**: Solves equations of the form `ax² + bx + c = 0`
-- **Cubic Solver**: Solves equations of the form `ax³ + bx² + cx + d = 0` using Cardano's method
-- **Quartic Solver**: Solves equations of the form `ax⁴ + bx³ + cx² + dx + e = 0` using Ferrari's method
-- **Complex Number Support**: Handles both real and complex roots seamlessly
-- **Step-by-Step Solutions**: Shows detailed mathematical steps for each solution
-- **Verification**: Automatically verifies solutions by substituting back into the original equation
-- **Multiple Test Cases**: Includes comprehensive test cases covering various scenarios
+- **二次求解器**: 求解形如 `ax² + bx + c = 0` 的方程
+- **三次求解器**: 使用卡尔达诺公式求解形如 `ax³ + bx² + cx + d = 0` 的方程
+- **四次求解器**: 使用法拉利方法求解形如 `ax⁴ + bx³ + cx² + dx + e = 0` 的方程
+- **复数支持**: 无缝处理实根和复根
+- **分步解决方案**: 显示每个解的详细数学步骤
+- **验证功能**: 通过将解代入原方程自动验证解的正确性
+- **多个测试用例**: 包含涵盖各种场景的综合测试用例
 
-## Mathematical Methods Used
+## 使用的数学方法
 
-### Quadratic Equations
-Uses the standard quadratic formula: `x = (-b ± √(b² - 4ac)) / (2a)`
+### 二次方程
+使用标准二次公式：`x = (-b ± √(b² - 4ac)) / (2a)`
 
-### Cubic Equations
-Uses Cardano's method:
-1. Normalize to monic polynomial
-2. Depress the cubic (eliminate x² term)
-3. Solve using the depressed cubic formula
-4. Handle all cases: three real roots, one real + two complex, or multiple roots
+### 三次方程
+使用卡尔达诺公式：
+1. 归一化为首一多项式
+2. 降次（消除x²项）
+3. 使用降次三次方程公式求解
+4. 处理所有情况：三个实根、一个实根+两个复根或重根
 
-### Quartic Equations
-Uses Ferrari's method:
-1. Normalize to monic polynomial
-2. Depress the quartic (eliminate x³ term)
-3. Solve the cubic resolvent
-4. Factor into two quadratics and solve
+### 四次方程
+使用费拉里方法：
+1. 归一化为首一多项式
+2. 降次（消除x³项）
+3. 求解三次预解方程
+4. 分解为两个二次方程并求解
 
-## Installation
+## 安装
 
-### Prerequisites
-- Java 11 or higher
-- Maven 3.6 or higher (for building)
+### 前置要求
+- Java 11 或更高版本
+- Maven 3.6 或更高版本（用于构建）
 
-### Building the Project
+### 构建项目
 ```bash
-# Clone the repository
+# 进入项目目录
 cd /path/to/equation-solver
 
-# Build the project
+# 构建项目
 mvn clean package
 
-# Run the application
+# 运行应用程序
 mvn exec:java -Prun
-# or
+# 或
 java -jar target/equation-solver-1.0.0.jar
 ```
 
-## Usage Examples
+## 使用示例
 
-### Quadratic Equation
+### 二次方程
 ```java
-// Solve x² - 5x + 6 = 0
+// 求解 x² - 5x + 6 = 0
 Complex[] roots = QuadraticSolver.solve(1, -5, 6);
 ```
 
-### Cubic Equation
+### 三次方程
 ```java
-// Solve x³ - 6x² + 11x - 6 = 0
+// 求解 x³ - 6x² + 11x - 6 = 0
 Complex[] roots = CubicSolver.solve(1, -6, 11, -6);
 ```
 
-### Quartic Equation
+### 四次方程
 ```java
-// Solve x⁴ - 5x² + 4 = 0
+// 求解 x⁴ - 5x² + 4 = 0
 Complex[] roots = QuarticSolver.solve(1, 0, -5, 0, 4);
 ```
 
-### Verification
+### 验证
 ```java
-// Verify quadratic solutions
+// 验证二次方程解
 boolean verified = QuadraticVerifier.verify(1, -5, 6, roots);
 
-// Verify cubic solutions
+// 验证三次方程解
 boolean verified = CubicVerifier.verify(1, -6, 11, -6, roots);
 
-// Verify quartic solutions
+// 验证四次方程解
 boolean verified = QuarticVerifier.verify(1, 0, -5, 0, 4, roots);
 ```
 
-## Test Cases Included
+## 包含的测试用例
 
-The main application includes the following test cases:
+主应用程序包含以下测试用例：
 
-### Quadratic Tests
-1. `x² - 5x + 6 = 0` → roots: 2, 3
-2. `x² + 1 = 0` → roots: i, -i
-3. `x² - 4x + 4 = 0` → repeated root: 2
+### 二次方程测试
+1. `x² - 5x + 6 = 0` → 根: 2, 3
+2. `x² + 1 = 0` → 根: i, -i
+3. `x² - 4x + 4 = 0` → 重根: 2
 
-### Cubic Tests
-1. `x³ - 6x² + 11x - 6 = 0` → roots: 1, 2, 3
-2. `x³ - 1 = 0` → roots: 1, -0.5±0.866i
-3. `x³ - 3x² + 3x - 1 = 0` → triple root: 1
+### 三次方程测试
+1. `x³ - 6x² + 11x - 6 = 0` → 根: 1, 2, 3
+2. `x³ - 1 = 0` → 根: 1, -0.5±0.866i
+3. `x³ - 3x² + 3x - 1 = 0` → 三重根: 1
 
-### Quartic Tests
-1. `x⁴ - 5x² + 4 = 0` → roots: ±1, ±2
-2. `x⁴ - 10x³ + 35x² - 50x + 24 = 0` → roots: 1, 2, 3, 4
-3. `x⁴ + 1 = 0` → four complex roots
+### 四次方程测试
+1. `x⁴ - 5x² + 4 = 0` → 根: ±1, ±2
+2. `x⁴ - 10x³ + 35x² - 50x + 24 = 0` → 根: 1, 2, 3, 4
+3. `x⁴ + 1 = 0` → 四个复根
 
-## Project Structure
+## 项目结构
 
 ```
 src/
@@ -110,30 +110,30 @@ src/
 │   └── java/
 │       └── com/
 │           └── equation/
-│               ├── Complex.java          # Complex number implementation
-│               ├── QuadraticSolver.java  # Quadratic equation solver
-│               ├── CubicSolver.java      # Cubic equation solver
-│               ├── QuarticSolver.java    # Quartic equation solver
-│               ├── Main.java             # Main application with test cases
-│               └── verifier/             # Verification classes
+│               ├── Complex.java          # 复数类实现
+│               ├── QuadraticSolver.java  # 二次方程求解器
+│               ├── CubicSolver.java      # 三次方程求解器
+│               ├── QuarticSolver.java    # 四次方程求解器
+│               ├── Main.java             # 主应用程序，包含测试用例
+│               └── verifier/             # 验证类
 │                   ├── QuadraticVerifier.java
 │                   ├── CubicVerifier.java
 │                   └── QuarticVerifier.java
-pom.xml                                   # Maven build configuration
-README.md                                 # This documentation
+pom.xml                                   # Maven构建配置
+README.md                                 # 本文档
 ```
 
-## Accuracy and Limitations
+## 精度和限制
 
-- **Precision**: Uses double-precision floating point arithmetic
-- **Tolerance**: Verification uses tolerance of 1e-8 for floating-point comparisons
-- **Edge Cases**: Handles special cases like multiple roots, complex roots, and degenerate cases
-- **Performance**: Optimized for clarity and educational purposes rather than extreme performance
+- **精度**: 使用双精度浮点运算
+- **容差**: 验证时使用1e-8的容差进行浮点比较
+- **边界情况**: 处理特殊情况，如重根、复根和退化情况
+- **性能**: 针对清晰度和教育目的进行了优化，而非极致性能
 
-## License
+## 许可证
 
-This project is open source and available under the MIT License.
+该项目是开源的，可在MIT许可证下使用。
 
-## Author
+## 作者
 
-Created as part of the Fangcheng (方程) equation solving project.
+作为方程求解项目的一部分创建。

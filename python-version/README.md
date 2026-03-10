@@ -1,140 +1,140 @@
-# Equation Solver
+# 方程求解器
 
-A comprehensive Python library for solving quadratic, cubic, and quartic equations with detailed step-by-step solutions and verification.
+一个功能全面的Python库，用于求解二次、三次和四次方程，提供详细的分步解决方案和验证功能。
 
-## Features
+## 功能特性
 
-- **Quadratic Equations**: Solves equations of the form `ax² + bx + c = 0`
-- **Cubic Equations**: Solves equations of the form `ax³ + bx² + cx + d = 0` using Cardano's method
-- **Quartic Equations**: Solves equations of the form `ax⁴ + bx³ + cx² + dx + e = 0` using numerical methods
-- **Step-by-Step Solutions**: Shows detailed mathematical steps for each solution
-- **Exact Expression Display**: Properly formats complex numbers and mathematical expressions
-- **Solution Verification**: Automatically verifies solutions by substituting back into the original equation
-- **Object-Oriented Design**: Clean, modular architecture following Python best practices
+- **二次方程**: 求解形如 `ax² + bx + c = 0` 的方程
+- **三次方程**: 使用卡尔达诺公式求解形如 `ax³ + bx² + cx + d = 0` 的方程
+- **四次方程**: 使用数值方法求解形如 `ax⁴ + bx³ + cx² + dx + e = 0` 的方程
+- **分步解决方案**: 显示每个解的详细数学步骤
+- **精确表达式显示**: 正确格式化复数和数学表达式
+- **解验证**: 通过将解代入原方程自动验证解的正确性
+- **面向对象设计**: 遵循Python最佳实践的清晰、模块化架构
 
-## Installation
+## 安装
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/yourusername/equation-solver.git
 cd equation-solver
 
-# Create virtual environment (recommended)
+# 创建虚拟环境（推荐）
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows上：venv\Scripts\activate
 
-# Install dependencies
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-## Usage
+## 使用方法
 
-### Command Line Interface
+### 命令行界面
 
-Run the main program to interactively solve equations:
+运行主程序以交互式方式求解方程：
 
 ```bash
 python src/main.py
 ```
 
-The CLI will guide you through selecting the equation type and entering coefficients.
+CLI将引导您选择方程类型并输入系数。
 
-### Programmatic Usage
+### 程序化使用
 
 ```python
 from src.equation_solver import EquationSolver
 from src.verifier import SolutionVerifier
 
-# Solve a quadratic equation: x² - 5x + 6 = 0
+# 求解二次方程：x² - 5x + 6 = 0
 solution = EquationSolver.solve_quadratic(1, -5, 6)
 
-# Print detailed solution
+# 打印详细解决方案
 EquationSolver.print_solution(solution)
 
-# Verify the solution
+# 验证解
 verifier = SolutionVerifier()
 verification_results = verifier.verify_quadratic(1, -5, 6, solution.roots)
 verifier.print_verification_results(verification_results)
 ```
 
-## Equation Types Supported
+## 支持的方程类型
 
-### Quadratic Equations
-- Form: `ax² + bx + c = 0`
-- Uses the quadratic formula: `x = (-b ± √(b² - 4ac)) / (2a)`
-- Handles real and complex roots
+### 二次方程
+- 形式: `ax² + bx + c = 0`
+- 使用二次公式: `x = (-b ± √(b² - 4ac)) / (2a)`
+- 处理实根和复根
 
-### Cubic Equations
-- Form: `ax³ + bx² + cx + d = 0`
-- Uses Cardano's method with depression transformation
-- Handles all cases: three real roots, one real + two complex, or multiple roots
+### 三次方程
+- 形式: `ax³ + bx² + cx + d = 0`
+- 使用带降次变换的卡尔达诺公式
+- 处理所有情况: 三个实根、一个实根+两个复根或重根
 
-### Quartic Equations
-- Form: `ax⁴ + bx³ + cx² + dx + e = 0`
-- Uses numerical methods for practical solution finding
-- Returns all four roots (real and/or complex)
+### 四次方程
+- 形式: `ax⁴ + bx³ + cx² + dx + e = 0`
+- 使用数值方法实际求解
+- 返回所有四个根（实根和/或复根）
 
-## Testing
+## 测试
 
-Run the test suite to verify functionality:
+运行测试套件以验证功能：
 
 ```bash
-# Run all tests
+# 运行所有测试
 pytest tests/
 
-# Run with coverage
+# 带覆盖率运行
 pytest --cov=src --cov-report=term-missing tests/
 ```
 
-## Example Output
+## 示例输出
 
-For the quadratic equation `x² - 5x + 6 = 0`:
+对于二次方程 `x² - 5x + 6 = 0`：
 
 ```
-Quadratic Equation Solution
+二次方程解决方案
 ==================================================
 
-Original equation:
-  Formula: x² - 5x + 6 = 0
+原方程：
+  公式：x² - 5x + 6 = 0
 
-Calculate discriminant:
-  Formula: D = b² - 4ac = (-5)² - 4(1)(6)
-  Result: D = 1
+计算判别式：
+  公式：D = b² - 4ac = (-5)² - 4(1)(6)
+  结果：D = 1
 
-Apply quadratic formula:
-  Formula: x = (-b ± √D) / (2a)
-  Result: x₁ = 3, x₂ = 2
+应用二次公式：
+  公式：x = (-b ± √D) / (2a)
+  结果：x₁ = 3, x₂ = 2
 
-Final roots:
+最终根：
   x1 = 3
   x2 = 2
 
-Verification Results
+验证结果
 ========================================
-  Root 1: ✓ VALID
-    Root value: 3.0
-    Substituted value: 0.0
-  Root 2: ✓ VALID
-    Root value: 2.0
-    Substituted value: 0.0
+  根 1: ✓ 有效
+    根值: 3.0
+    代入值: 0.0
+  根 2: ✓ 有效
+    根值: 2.0
+    代入值: 0.0
 
-Overall: All solutions verified successfully!
+总体结果: 所有解验证成功！
 ```
 
-## Dependencies
+## 依赖
 
 - **Python 3.8+**
-- **NumPy** (for numerical computations in quartic solver)
-- **pytest** (for testing)
+- **NumPy** (用于四次方程求解器中的数值计算)
+- **pytest** (用于测试)
 
-## Development
+## 开发
 
-This project follows PEP 8 coding standards and uses:
-- **black** for code formatting
-- **isort** for import sorting
-- **ruff** for linting
-- **mypy** for type checking
+该项目遵循PEP 8编码标准，并使用：
+- **black** 用于代码格式化
+- **isort** 用于导入排序
+- **ruff** 用于代码检查
+- **mypy** 用于类型检查
 
-## License
+## 许可证
 
-MIT License
+MIT许可证

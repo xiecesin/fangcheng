@@ -6,44 +6,44 @@
 
 ```
 ========================================
-Quadratic Equation Solution
+二次方程解决方案
 ========================================
 
-Original equation:
+原方程：
   1.0x² - 5.0x + 6.0 = 0
 
-Step 1: Calculate discriminant Δ = b² - 4ac
+步骤1: 计算判别式 Δ = b² - 4ac
   (-5.0)² - 4×(1.0)×(6.0) = 25.0 - 24.0 = 1.0
-  Δ = 1.0 > 0, two distinct real roots
+  Δ = 1.0 > 0，两个不同的实根
 
-Step 2: Apply quadratic formula x = (-b ± √Δ) / (2a)
+步骤2: 应用二次公式 x = (-b ± √Δ) / (2a)
   x₁ = (5.0 + 1.0) / 2.0 = 3.0
   x₂ = (5.0 - 1.0) / 2.0 = 2.0
 
-Exact expressions:
+精确表达式：
   x₁ = (5 + √1)/2
   x₂ = (5 - √1)/2
 
 ========================================
-Verification Results
+验证结果
 ========================================
-Verifying root: x₁ = 3.0
-  Substituting into: 1.0x² - 5.0x + 6.0
-    Term 1: 1.0 × (3.0)² = 9.0
-    Term 2: -5.0 × 3.0 = -15.0
-    Term 3: 6.0 = 6.0
-  Total = 9.0 + (-15.0) + 6.0 = 0.0
-  ✓ Verified! Error = 0.0
+验证根：x₁ = 3.0
+  代入方程：1.0x² - 5.0x + 6.0
+    项1: 1.0 × (3.0)² = 9.0
+    项2: -5.0 × 3.0 = -15.0
+    项3: 6.0 = 6.0
+  总和 = 9.0 + (-15.0) + 6.0 = 0.0
+  ✓ 验证通过！误差 = 0.0
 
-Verifying root: x₂ = 2.0
-  Substituting into: 1.0x² - 5.0x + 6.0
-    Term 1: 1.0 × (2.0)² = 4.0
-    Term 2: -5.0 × 2.0 = -10.0
-    Term 3: 6.0 = 6.0
-  Total = 4.0 + (-10.0) + 6.0 = 0.0
-  ✓ Verified! Error = 0.0
+验证根：x₂ = 2.0
+  代入方程：1.0x² - 5.0x + 6.0
+    项1: 1.0 × (2.0)² = 4.0
+    项2: -5.0 × 2.0 = -10.0
+    项3: 6.0 = 6.0
+  总和 = 4.0 + (-10.0) + 6.0 = 0.0
+  ✓ 验证通过！误差 = 0.0
 
-Overall: All 2 solutions verified successfully!
+总体：所有2个解验证成功！
 ```
 
 ---
@@ -52,63 +52,63 @@ Overall: All 2 solutions verified successfully!
 
 ```
 ========================================
-Cubic Equation Solution
+三次方程解决方案
 ========================================
 
-Original equation:
+原方程：
   1.0x³ - 6.0x² + 11.0x - 6.0 = 0
 
-Step 1: Normalize to monic form (a=1)
-  Already normalized: x³ - 6.0x² + 11.0x - 6.0 = 0
+步骤1: 归一化为首一形式 (a=1)
+  已归一化：x³ - 6.0x² + 11.0x - 6.0 = 0
 
-Step 2: Depress cubic (eliminate x² term)
-  Substitute x = y + h, where h = -b/(3a) = 2.0
-  Result: y³ - 1.0y + 0.0 = 0
-  Where p = -1.0, q = 0.0
+步骤2: 三次方程降次 (消除x²项)
+  代入 x = y + h，其中 h = -b/(3a) = 2.0
+  结果：y³ - 1.0y + 0.0 = 0
+  其中 p = -1.0, q = 0.0
 
-Step 3: Calculate discriminant Δ = (q/2)² + (p/3)³
+步骤3: 计算判别式 Δ = (q/2)² + (p/3)³
   (0.0)² + (-1.0/3.0)³ = 0.0 + (-0.333333)³ = -0.037037
-  Δ = -0.037 < 0, three real roots (casus irreducibilis)
+  Δ = -0.037 < 0，三个实根（不可约情况）
 
-Step 4: Use trigonometric solution
+步骤4: 使用三角解法
   r = √(-(p/3)³) = √(0.037037) = 0.19245
-  θ = arccos(-(q/2)/r) = arccos(0.0) = 1.5708 rad
+  θ = arccos(-(q/2)/r) = arccos(0.0) = 1.5708 弧度
 
   y₁ = 2√(-p/3)×cos(θ/3) = 2.0×cos(0.5236) = 1.73205
   y₂ = 2√(-p/3)×cos(θ/3 + 2π/3) = -0.73205
   y₃ = 2√(-p/3)×cos(θ/3 + 4π/3) = -1.0
 
-Step 5: Transform back x = y + h
+步骤5: 变换回原变量 x = y + h
   x₁ = 1.73205 + 2.0 = 3.73205
   x₂ = -0.73205 + 2.0 = 1.26795
   x₃ = -1.0 + 2.0 = 1.0
 
-Exact expressions (simplified):
+精确表达式（简化）：
   x₁ = 3
   x₂ = 2
   x₃ = 1
 
 ========================================
-Verification Results
+验证结果
 ========================================
-Verifying root: x₁ = 3.0
-  Substituting into: 1.0x³ - 6.0x² + 11.0x - 6.0
-    Term 1: 1.0 × (3.0)³ = 27.0
-    Term 2: -6.0 × (3.0)² = -54.0
-    Term 3: 11.0 × 3.0 = 33.0
-    Term 4: -6.0 = -6.0
-  Total = 27.0 + (-54.0) + 33.0 + (-6.0) = 0.0
-  ✓ Verified! Error = 0.0
+验证根：x₁ = 3.0
+  代入方程：1.0x³ - 6.0x² + 11.0x - 6.0
+    项1: 1.0 × (3.0)³ = 27.0
+    项2: -6.0 × (3.0)² = -54.0
+    项3: 11.0 × 3.0 = 33.0
+    项4: -6.0 = -6.0
+  总和 = 27.0 + (-54.0) + 33.0 + (-6.0) = 0.0
+  ✓ 验证通过！误差 = 0.0
 
-Verifying root: x₂ = 2.0
-  ... (similar output)
-  ✓ Verified! Error = 0.0
+验证根：x₂ = 2.0
+  ... (类似输出)
+  ✓ 验证通过！误差 = 0.0
 
-Verifying root: x₃ = 1.0
-  ... (similar output)
-  ✓ Verified! Error = 0.0
+验证根：x₃ = 1.0
+  ... (类似输出)
+  ✓ 验证通过！误差 = 0.0
 
-Overall: All 3 solutions verified successfully!
+总体：所有3个解验证成功！
 ```
 
 ---
@@ -118,39 +118,39 @@ Overall: All 3 solutions verified successfully!
 ### 二次方程求解（复根）
 
 ```
-Quadratic Equation Solver
+二次方程求解器
 ================================================
-Solving: 1.0x² + 2.0x + 5.0 = 0
+求解：1.0x² + 2.0x + 5.0 = 0
 
-Step 1: Calculate discriminant Δ = b² - 4ac
+步骤1: 计算判别式 Δ = b² - 4ac
   Δ = (2.0)² - 4×(1.0)×(5.0) = 4.0 - 20.0 = -16.0
 
-Step 2: Δ < 0, two complex conjugate roots
+步骤2: Δ < 0，两个共轭复根
   √(-Δ) = √16.0 = 4.0
 
-Step 3: Apply quadratic formula x = (-b ± i√(-Δ)) / (2a)
+步骤3: 应用二次公式 x = (-b ± i√(-Δ)) / (2a)
   x1 = (-2.0 + 4.0i) / 2.0 = -1.0 + 2.0i
   x2 = (-2.0 - 4.0i) / 2.0 = -1.0 - 2.0i
 
-Exact expressions:
+精确表达式：
   x1 = (-2 + 4i)/2
   x2 = (-2 - 4i)/2
 
-Solutions:
+解：
   x1 = -1.0 + 2.0i
   x2 = -1.0 - 2.0i
 
-Verification:
-  Verifying x1 = -1.0 + 2.0i
+验证：
+  验证 x1 = -1.0 + 2.0i
     1.0×(-1.0 + 2.0i)² = -3.0 - 4.0i
     2.0×(-1.0 + 2.0i) = -2.0 + 4.0i
-    Constant: 5.0
-    Sum: 0.0 + 0.0i
-    ✓ Verified! Error: 0.0
+    常数项: 5.0
+    总和: 0.0 + 0.0i
+    ✓ 验证通过！误差: 0.0
 
-  Verifying x2 = -1.0 - 2.0i
-    ... (similar output)
-    ✓ Verified! Error: 0.0
+  验证 x2 = -1.0 - 2.0i
+    ... (类似输出)
+    ✓ 验证通过！误差: 0.0
 
 ================================================
 ```
@@ -160,51 +160,51 @@ Verification:
 ### 四次方程求解
 
 ```
-Quartic Equation Solver
+四次方程求解器
 ================================================
-Solving: 1.0x⁴ - 5.0x² + 4.0 = 0
+求解：1.0x⁴ - 5.0x² + 4.0 = 0
 
-Step 1: Normalize to monic form (a=1)
-  Already normalized: x⁴ - 5.0x² + 4.0 = 0
+步骤1: 归一化为首一形式 (a=1)
+  已归一化：x⁴ - 5.0x² + 4.0 = 0
 
-Step 2: Depress quartic (eliminate x³ term)
-  Already depressed (no x³ term): x⁴ - 5.0x² + 4.0 = 0
-  Where p = -5.0, q = 0.0, r = 4.0
+步骤2: 四次方程降次 (消除x³项)
+  已降次（无x³项）：x⁴ - 5.0x² + 4.0 = 0
+  其中 p = -5.0, q = 0.0, r = 4.0
 
-Step 3: Solve resolvent cubic: z³ + 2pz² + (p²-4r)z - q² = 0
+步骤3: 求解预解三次方程: z³ + 2pz² + (p²-4r)z - q² = 0
   z³ - 10.0z² + 9.0z = 0
 
-  Solving resolvent cubic:
-    z = 0.0, 1.0, 9.0  (found one positive root: z1 = 1.0)
+  求解预解三次方程：
+    z = 0.0, 1.0, 9.0  (找到一个正根: z1 = 1.0)
 
-Step 4: Calculate u = √z1 = √1.0 = 1.0
+步骤4: 计算 u = √z1 = √1.0 = 1.0
 
-Step 5: Form two quadratic factors:
-  Factor 1: x² + ux + (p + z1 + q/u)/2
-           = x² + 1.0x + (-1.0)
-           = x² + x - 1.0 = 0
+步骤5: 形成两个二次因子：
+  因子1: x² + ux + (p + z1 + q/u)/2
+         = x² + 1.0x + (-1.0)
+         = x² + x - 1.0 = 0
 
-  Factor 2: x² - ux + (p + z1 - q/u)/2
-           = x² - 1.0x + (-1.0)
-           = x² - x - 1.0 = 0
+  因子2: x² - ux + (p + z1 - q/u)/2
+         = x² - 1.0x + (-1.0)
+         = x² - x - 1.0 = 0
 
-Step 6: Solve the two quadratics
-  From x² + x - 1.0 = 0: x = -1.61803, 0.61803
-  From x² - x - 1.0 = 0: x = 1.61803, -0.61803
+步骤6: 求解两个二次方程
+  从 x² + x - 1.0 = 0: x = -1.61803, 0.61803
+  从 x² - x - 1.0 = 0: x = 1.61803, -0.61803
 
-Solutions:
+解：
   x1 = 1.61803
   x2 = -0.61803
   x3 = -1.61803
   x4 = 0.61803
 
-Verification:
-  Verifying x1 = 1.61803: ✓ Error = 8.9e-16
-  Verifying x2 = -0.61803: ✓ Error = 1.1e-15
-  Verifying x3 = -1.61803: ✓ Error = 8.9e-16
-  Verifying x4 = 0.61803: ✓ Error = 1.1e-15
+验证：
+  验证 x1 = 1.61803: ✓ 误差 = 8.9e-16
+  验证 x2 = -0.61803: ✓ 误差 = 1.1e-15
+  验证 x3 = -1.61803: ✓ 误差 = 8.9e-16
+  验证 x4 = 0.61803: ✓ 误差 = 1.1e-15
 
-All 4 solutions verified successfully!
+所有4个解验证成功！
 ================================================
 ```
 
