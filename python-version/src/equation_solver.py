@@ -83,7 +83,9 @@ class MarkdownExporter:
             # 添加 LaTeX 内容（换行格式）
             if latex_step:
                 lines.append("$$")
+                lines.append("\\begin{gather}")
                 lines.append(latex_step)
+                lines.append("\\end{gather}")
                 lines.append("$$")
                 lines.append("")
         
