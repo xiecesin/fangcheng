@@ -21,6 +21,18 @@ public class CubicSolver {
             throw new IllegalArgumentException("三次方程的系数 'a' 不能为零");
         }
 
+        // 创建符号表达式 - 基于原始系数
+        SymbolicExpression aExpr = new SymbolicExpression(a);
+        SymbolicExpression bExpr = new SymbolicExpression(b);
+        SymbolicExpression cExpr = new SymbolicExpression(c);
+        SymbolicExpression dExpr = new SymbolicExpression(d);
+        
+        // 归一化系数的符号表达式
+        SymbolicExpression aNormExpr = new SymbolicExpression(1.0);
+        SymbolicExpression bNormExpr = SymbolicExpression.divide(bExpr, aExpr);
+        SymbolicExpression cNormExpr = SymbolicExpression.divide(cExpr, aExpr);
+        SymbolicExpression dNormExpr = SymbolicExpression.divide(dExpr, aExpr);
+
         // 步骤1: 归一化为首一多项式（除以a）
         double aNorm = 1.0;
         double bNorm = b / a;
@@ -28,29 +40,67 @@ public class CubicSolver {
         double dNorm = d / a;
 
         System.out.println("步骤1: 归一化为首一多项式（除以a = " + a + "）");
-        System.out.println("        x^3 + (" + bNorm + ")x^2 + (" + cNorm + ")x + (" + dNorm + ") = 0");
-
+        System.out.println("        x^3 + (" + bNormExpr + ")x^2 + (" + cNormExpr + ")x + (" + dNormExpr + ") = 0");
+        
         // 步骤2: 降次（消除x^2项），使用代换 x = t - b/(3a)
         double p = cNorm - bNorm * bNorm / 3.0;
         double q = (2.0 * bNorm * bNorm * bNorm - 9.0 * bNorm * cNorm + 27.0 * dNorm) / 27.0;
+        
+        // 符号表达式 for p and q (基于原始系数)
+        // p = cNorm - bNorm² / 3
+        SymbolicExpression symbolP = SymbolicExpression.subtract(
+            cNormExpr,
+            SymbolicExpression.divide(
+                SymbolicExpression.power(bNormExpr, new SymbolicExpression(2.0)),
+                new SymbolicExpression(3.0)
+            )
+        );
+        
+        // q = (2bNorm³ - 9bNorm cNorm + 27dNorm) / 27
+        // 或者等价于：q = (2b³ - 9abc + 27a²d) / (27a³)
+        SymbolicExpression numeratorQ = SymbolicExpression.add(
+            SymbolicExpression.subtract(
+                SymbolicExpression.multiply(new SymbolicExpression(2.0), SymbolicExpression.power(bExpr, new SymbolicExpression(3.0))),
+                SymbolicExpression.multiply(
+                    new SymbolicExpression(9.0),
+                    SymbolicExpression.multiply(
+                        SymbolicExpression.multiply(aExpr, bExpr),
+                        cExpr
+                    )
+                )
+            ),
+            SymbolicExpression.multiply(
+                new SymbolicExpression(27.0),
+                SymbolicExpression.multiply(
+                    SymbolicExpression.power(aExpr, new SymbolicExpression(2.0)),
+                    dExpr
+                )
+            )
+        );
+        
+        SymbolicExpression denominatorQ = SymbolicExpression.multiply(
+            new SymbolicExpression(27.0),
+            SymbolicExpression.power(aExpr, new SymbolicExpression(3.0))
+        );
+        
+        SymbolicExpression symbolQ = SymbolicExpression.divide(numeratorQ, denominatorQ);
 
         System.out.println("步骤2: 降次，使用代换 x = t - b/(3a)");
         System.out.println("        结果: t^3 + pt + q = 0");
-        System.out.println("        其中 p = " + p + ", q = " + q);
+        System.out.println("        其中 p = " + symbolP + ", q = " + symbolQ);
 
         // 步骤3: 计算判别式
         double discriminant = (q * q) / 4.0 + (p * p * p) / 27.0;
-        System.out.println("步骤3: 计算判别式 Δ = (q/2)^2 + (p/3)^3 = " + discriminant);
-
-        Complex[] roots = new Complex[3];
         
-        // 创建符号表达式
-        SymbolicExpression symbolP = new SymbolicExpression(p);
-        SymbolicExpression symbolQ = new SymbolicExpression(q);
+        // 判别式的符号表达式
         SymbolicExpression symbolDiscriminant = SymbolicExpression.add(
             SymbolicExpression.power(SymbolicExpression.divide(symbolQ, new SymbolicExpression(2.0)), new SymbolicExpression(2.0)),
             SymbolicExpression.power(SymbolicExpression.divide(symbolP, new SymbolicExpression(3.0)), new SymbolicExpression(3.0))
         );
+
+        System.out.println("步骤3: 计算判别式 Δ = (q/2)^2 + (p/3)^3 = " + symbolDiscriminant);
+
+        Complex[] roots = new Complex[3];
 
         if (Math.abs(discriminant) < 1e-10) {
             // 重根情况
@@ -149,7 +199,9 @@ public class CubicSolver {
         }
 
         // 从t转换回x
+        SymbolicExpression symbolBOver3A = SymbolicExpression.divide(bNormExpr, new SymbolicExpression(3.0));
         System.out.println("步骤4: 使用 x = t - b/(3a) 从t转换回x");
+        System.out.println("        其中 b/(3a) = " + symbolBOver3A);
         System.out.println("        最终根:");
         for (int i = 0; i < 3; i++) {
             System.out.println("        x" + (i + 1) + " = " + roots[i]);

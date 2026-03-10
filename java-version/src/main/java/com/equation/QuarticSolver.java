@@ -32,20 +32,59 @@ public class QuarticSolver {
         System.out.println("步骤1: 归一化为首一多项式（除以a = " + a + "）");
         System.out.println("        x^4 + (" + bNorm + ")x^3 + (" + cNorm + ")x^2 + (" + dNorm + ")x + (" + eNorm + ") = 0");
 
+        // 创建符号表达式 - 基于原始系数
+        SymbolicExpression aExpr = new SymbolicExpression(a);
+        SymbolicExpression bExpr = new SymbolicExpression(b);
+        SymbolicExpression cExpr = new SymbolicExpression(c);
+        SymbolicExpression dExpr = new SymbolicExpression(d);
+        SymbolicExpression eExpr = new SymbolicExpression(e);
+        
+        // 归一化系数的符号表达式
+        SymbolicExpression aNormExpr = new SymbolicExpression(1.0);
+        SymbolicExpression bNormExpr = SymbolicExpression.divide(bExpr, aExpr);
+        SymbolicExpression cNormExpr = SymbolicExpression.divide(cExpr, aExpr);
+        SymbolicExpression dNormExpr = SymbolicExpression.divide(dExpr, aExpr);
+        SymbolicExpression eNormExpr = SymbolicExpression.divide(eExpr, aExpr);
+        
         // 步骤2: 降次（消除x^3项），使用代换 x = y - b/(4a)
         double p = cNorm - 3.0 * bNorm * bNorm / 8.0;
         double q = bNorm * bNorm * bNorm / 8.0 - bNorm * cNorm / 2.0 + dNorm;
         double r = -3.0 * bNorm * bNorm * bNorm * bNorm / 256.0 + bNorm * bNorm * cNorm / 16.0 - bNorm * dNorm / 4.0 + eNorm;
+        
+        // 符号表达式 for p, q, r (基于原始系数)
+        // p = cNorm - 3bNorm² / 8
+        SymbolicExpression symbolP = SymbolicExpression.subtract(
+            cNormExpr,
+            SymbolicExpression.divide(
+                SymbolicExpression.multiply(new SymbolicExpression(3.0), SymbolicExpression.power(bNormExpr, new SymbolicExpression(2.0))),
+                new SymbolicExpression(8.0)
+            )
+        );
+        
+        // q = bNorm³ / 8 - bNorm cNorm / 2 + dNorm
+        SymbolicExpression symbolQ = SymbolicExpression.add(
+            SymbolicExpression.subtract(
+                SymbolicExpression.divide(SymbolicExpression.power(bNormExpr, new SymbolicExpression(3.0)), new SymbolicExpression(8.0)),
+                SymbolicExpression.divide(SymbolicExpression.multiply(bNormExpr, cNormExpr), new SymbolicExpression(2.0))
+            ),
+            dNormExpr
+        );
+        
+        // r = -3bNorm⁴ / 256 + bNorm² cNorm / 16 - bNorm dNorm / 4 + eNorm
+        SymbolicExpression symbolR = SymbolicExpression.add(
+            SymbolicExpression.add(
+                SymbolicExpression.subtract(
+                    SymbolicExpression.divide(SymbolicExpression.multiply(new SymbolicExpression(-3.0), SymbolicExpression.power(bNormExpr, new SymbolicExpression(4.0))), new SymbolicExpression(256.0)),
+                    SymbolicExpression.divide(SymbolicExpression.multiply(SymbolicExpression.power(bNormExpr, new SymbolicExpression(2.0)), cNormExpr), new SymbolicExpression(16.0))
+                ),
+                SymbolicExpression.divide(SymbolicExpression.multiply(new SymbolicExpression(-1.0), SymbolicExpression.multiply(bNormExpr, dNormExpr)), new SymbolicExpression(4.0))
+            ),
+            eNormExpr
+        );
 
         System.out.println("步骤2: 降次，使用代换 x = y - b/(4a)");
         System.out.println("        结果: y^4 + py^2 + qy + r = 0");
-        System.out.println("        其中 p = " + p + ", q = " + q + ", r = " + r);
-        
-        // 创建符号表达式
-        SymbolicExpression symbolP = new SymbolicExpression(p);
-        SymbolicExpression symbolQ = new SymbolicExpression(q);
-        SymbolicExpression symbolR = new SymbolicExpression(r);
-        SymbolicExpression symbolBNorm = new SymbolicExpression(bNorm);
+        System.out.println("        其中 p = " + symbolP + ", q = " + symbolQ + ", r = " + symbolR);
 
         // 步骤3: 处理特殊情况
         if (Math.abs(q) < 1e-10) {
@@ -123,8 +162,8 @@ public class QuarticSolver {
      * Solves a biquadratic equation y^4 + py^2 + r = 0.
      */
     private static Complex[] solveBiquadratic(double p, double r, double bNorm, SymbolicExpression symbolP, SymbolicExpression symbolR) {
-        System.out.println("        求解双二次方程 y^4 + (" + p + ")y^2 + (" + r + ") = 0");
-        System.out.println("        令 z = y^2，得到 z^2 + pz + r = 0");
+        System.out.println("        求解双二次方程 y^4 + " + symbolP + "y^2 + " + symbolR + " = 0");
+        System.out.println("        令 z = y^2，得到 z^2 + " + symbolP + "z + " + symbolR + " = 0");
         
         // 创建二次方程的符号表达式
         SymbolicExpression symbolZQuadratic = SymbolicExpression.add(
@@ -186,8 +225,6 @@ public class QuarticSolver {
             roots[i] = yRoots[i].subtract(new Complex(bNorm / 4.0));
         }
         
-        SymbolicExpression symbolBNorm = new SymbolicExpression(bNorm);
-
         System.out.println("        转换回x = y - b/(4a):");
         for (int i = 0; i < 4; i++) {
             System.out.println("        x" + (i + 1) + " = " + roots[i]);

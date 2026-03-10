@@ -178,13 +178,33 @@ public class SymbolicExpression {
             case CBRT:
                 return "∛(" + leftOperand.toString() + ")";
             case ADD:
-                return "(" + leftOperand.toString() + " + " + rightOperand.toString() + ")";
+                String leftAdd = leftOperand.toString();
+                String rightAdd = rightOperand.toString();
+                if (isSimple(leftOperand) && isSimple(rightOperand)) {
+                    return leftAdd + " + " + rightAdd;
+                }
+                return "(" + leftAdd + " + " + rightAdd + ")";
             case SUBTRACT:
-                return "(" + leftOperand.toString() + " - " + rightOperand.toString() + ")";
+                String leftSub = leftOperand.toString();
+                String rightSub = rightOperand.toString();
+                if (isSimple(leftOperand) && isSimple(rightOperand)) {
+                    return leftSub + " - " + rightSub;
+                }
+                return "(" + leftSub + " - " + rightSub + ")";
             case MULTIPLY:
-                return "(" + leftOperand.toString() + " × " + rightOperand.toString() + ")";
+                String leftMul = leftOperand.toString();
+                String rightMul = rightOperand.toString();
+                if (isSimple(leftOperand) && isSimple(rightOperand)) {
+                    return leftMul + " × " + rightMul;
+                }
+                return "(" + leftMul + " × " + rightMul + ")";
             case DIVIDE:
-                return "(" + leftOperand.toString() + " ÷ " + rightOperand.toString() + ")";
+                String leftDiv = leftOperand.toString();
+                String rightDiv = rightOperand.toString();
+                if (isSimple(leftOperand) && isSimple(rightOperand)) {
+                    return leftDiv + " ÷ " + rightDiv;
+                }
+                return "(" + leftDiv + " ÷ " + rightDiv + ")";
             case POWER:
                 if (rightOperand.operationType == OperationType.CONSTANT) {
                     double exponent = (double) rightOperand.value;
@@ -198,5 +218,9 @@ public class SymbolicExpression {
             default:
                 throw new UnsupportedOperationException("Unsupported operation type: " + operationType);
         }
+    }
+    
+    private boolean isSimple(SymbolicExpression expr) {
+        return expr.operationType == OperationType.CONSTANT || expr.operationType == OperationType.VARIABLE;
     }
 }
