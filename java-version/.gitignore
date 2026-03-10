@@ -81,3 +81,6 @@ Thumbs.db
 *.bak
 *~
 .cache/
+
+.xcodemap/
+.DS_Store
