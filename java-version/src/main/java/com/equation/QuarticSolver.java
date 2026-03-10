@@ -40,12 +40,18 @@ public class QuarticSolver {
         System.out.println("步骤2: 降次，使用代换 x = y - b/(4a)");
         System.out.println("        结果: y^4 + py^2 + qy + r = 0");
         System.out.println("        其中 p = " + p + ", q = " + q + ", r = " + r);
+        
+        // 创建符号表达式
+        SymbolicExpression symbolP = new SymbolicExpression(p);
+        SymbolicExpression symbolQ = new SymbolicExpression(q);
+        SymbolicExpression symbolR = new SymbolicExpression(r);
+        SymbolicExpression symbolBNorm = new SymbolicExpression(bNorm);
 
         // 步骤3: 处理特殊情况
         if (Math.abs(q) < 1e-10) {
             // 双二次情况: y^4 + py^2 + r = 0
             System.out.println("步骤3: 特殊情况 - 双二次方程 (q = 0)");
-            return solveBiquadratic(p, r, bNorm);
+            return solveBiquadratic(p, r, bNorm, symbolP, symbolR);
         }
 
         // 步骤4: 求解三次预解方程: z^3 + (p/2)z^2 + ((p^2 - 4r)/16)z - q^2/64 = 0
@@ -116,16 +122,49 @@ public class QuarticSolver {
     /**
      * Solves a biquadratic equation y^4 + py^2 + r = 0.
      */
-    private static Complex[] solveBiquadratic(double p, double r, double bNorm) {
+    private static Complex[] solveBiquadratic(double p, double r, double bNorm, SymbolicExpression symbolP, SymbolicExpression symbolR) {
         System.out.println("        求解双二次方程 y^4 + (" + p + ")y^2 + (" + r + ") = 0");
         System.out.println("        令 z = y^2，得到 z^2 + pz + r = 0");
+        
+        // 创建二次方程的符号表达式
+        SymbolicExpression symbolZQuadratic = SymbolicExpression.add(
+            SymbolicExpression.add(
+                SymbolicExpression.power(new SymbolicExpression("z"), new SymbolicExpression(2.0)),
+                SymbolicExpression.multiply(symbolP, new SymbolicExpression("z"))
+            ),
+            symbolR
+        );
+        System.out.println("        符号形式: " + symbolZQuadratic + " = 0");
 
         Complex[] zRoots = QuadraticSolver.solve(1.0, p, r);
         Complex[] yRoots = new Complex[4];
+        
+        // 创建二次方程的判别式符号表达式
+        SymbolicExpression symbolQuadraticDiscriminant = SymbolicExpression.subtract(
+            SymbolicExpression.power(symbolP, new SymbolicExpression(2.0)),
+            SymbolicExpression.multiply(new SymbolicExpression(4.0), SymbolicExpression.multiply(new SymbolicExpression(1.0), symbolR))
+        );
+        
+        // 创建z的符号解
+        SymbolicExpression[] symbolZRoots = new SymbolicExpression[2];
+        symbolZRoots[0] = SymbolicExpression.divide(
+            SymbolicExpression.add(
+                SymbolicExpression.subtract(new SymbolicExpression(0), symbolP),
+                SymbolicExpression.sqrt(symbolQuadraticDiscriminant)
+            ),
+            new SymbolicExpression(2.0)
+        );
+        symbolZRoots[1] = SymbolicExpression.divide(
+            SymbolicExpression.subtract(
+                SymbolicExpression.subtract(new SymbolicExpression(0), symbolP),
+                SymbolicExpression.sqrt(symbolQuadraticDiscriminant)
+            ),
+            new SymbolicExpression(2.0)
+        );
 
         System.out.println("        z的解:");
         for (int i = 0; i < 2; i++) {
-            System.out.println("        z" + (i + 1) + " = " + zRoots[i]);
+            System.out.println("        z" + (i + 1) + " = " + symbolZRoots[i] + " = " + zRoots[i]);
         }
 
         System.out.println("        现在对每个z求解 y^2 = z:");
@@ -133,8 +172,12 @@ public class QuarticSolver {
             Complex sqrtZ = zRoots[i].sqrt();
             yRoots[i * 2] = sqrtZ;
             yRoots[i * 2 + 1] = new Complex(0).subtract(sqrtZ);
+            
+            // 创建y的符号解
+            SymbolicExpression symbolSqrtZ = SymbolicExpression.sqrt(symbolZRoots[i]);
+            
             System.out.println("        对于 z" + (i + 1) + " = " + zRoots[i] + ":");
-            System.out.println("            y = ±" + sqrtZ);
+            System.out.println("            y = ±" + symbolSqrtZ + " = ±" + sqrtZ);
         }
 
         // 从y转换回x
@@ -142,6 +185,8 @@ public class QuarticSolver {
         for (int i = 0; i < 4; i++) {
             roots[i] = yRoots[i].subtract(new Complex(bNorm / 4.0));
         }
+        
+        SymbolicExpression symbolBNorm = new SymbolicExpression(bNorm);
 
         System.out.println("        转换回x = y - b/(4a):");
         for (int i = 0; i < 4; i++) {

@@ -43,6 +43,14 @@ public class CubicSolver {
         System.out.println("步骤3: 计算判别式 Δ = (q/2)^2 + (p/3)^3 = " + discriminant);
 
         Complex[] roots = new Complex[3];
+        
+        // 创建符号表达式
+        SymbolicExpression symbolP = new SymbolicExpression(p);
+        SymbolicExpression symbolQ = new SymbolicExpression(q);
+        SymbolicExpression symbolDiscriminant = SymbolicExpression.add(
+            SymbolicExpression.power(SymbolicExpression.divide(symbolQ, new SymbolicExpression(2.0)), new SymbolicExpression(2.0)),
+            SymbolicExpression.power(SymbolicExpression.divide(symbolP, new SymbolicExpression(3.0)), new SymbolicExpression(3.0))
+        );
 
         if (Math.abs(discriminant) < 1e-10) {
             // 重根情况
@@ -53,7 +61,10 @@ public class CubicSolver {
                 roots[0] = tRoot.subtract(new Complex(bNorm / 3.0));
                 roots[1] = roots[0];
                 roots[2] = roots[0];
-                System.out.println("        t = " + tRoot + " 处存在三重根");
+                
+                // 符号解
+                SymbolicExpression symbolTRoot = SymbolicExpression.cbrt(SymbolicExpression.divide(SymbolicExpression.subtract(new SymbolicExpression(0), symbolQ), new SymbolicExpression(2.0)));
+                System.out.println("        t = " + symbolTRoot + " = " + tRoot + " 处存在三重根");
             } else {
                 // 一个单根和一个二重根
                 Complex tRoot1 = new Complex(-3.0 * q / p);
@@ -61,7 +72,17 @@ public class CubicSolver {
                 roots[0] = tRoot1.subtract(new Complex(bNorm / 3.0));
                 roots[1] = tRoot2.subtract(new Complex(bNorm / 3.0));
                 roots[2] = roots[1];
-                System.out.println("        t = " + tRoot1 + " 处存在单根, t = " + tRoot2 + " 处存在二重根");
+                
+                // 符号解
+                SymbolicExpression symbolTRoot1 = SymbolicExpression.divide(
+                    SymbolicExpression.multiply(new SymbolicExpression(-3.0), symbolQ),
+                    symbolP
+                );
+                SymbolicExpression symbolTRoot2 = SymbolicExpression.divide(
+                    SymbolicExpression.multiply(new SymbolicExpression(3.0), symbolQ),
+                    SymbolicExpression.multiply(new SymbolicExpression(2.0), symbolP)
+                );
+                System.out.println("        t = " + symbolTRoot1 + " = " + tRoot1 + " 处存在单根, t = " + symbolTRoot2 + " = " + tRoot2 + " 处存在二重根");
             }
         } else if (discriminant > 0) {
             // 一个实根，两个共轭复根
@@ -79,7 +100,23 @@ public class CubicSolver {
             roots[1] = tRoot2.subtract(new Complex(bNorm / 3.0));
             roots[2] = tRoot3.subtract(new Complex(bNorm / 3.0));
 
-            System.out.println("        t1 = " + tRoot1);
+            // 符号解
+            SymbolicExpression symbolSqrtDiscriminant = SymbolicExpression.sqrt(symbolDiscriminant);
+            SymbolicExpression symbolU = SymbolicExpression.cbrt(
+                SymbolicExpression.add(
+                    SymbolicExpression.divide(SymbolicExpression.subtract(new SymbolicExpression(0), symbolQ), new SymbolicExpression(2.0)),
+                    symbolSqrtDiscriminant
+                )
+            );
+            SymbolicExpression symbolV = SymbolicExpression.cbrt(
+                SymbolicExpression.subtract(
+                    SymbolicExpression.divide(SymbolicExpression.subtract(new SymbolicExpression(0), symbolQ), new SymbolicExpression(2.0)),
+                    symbolSqrtDiscriminant
+                )
+            );
+            SymbolicExpression symbolTRoot1 = SymbolicExpression.add(symbolU, symbolV);
+            
+            System.out.println("        t1 = " + symbolTRoot1 + " = " + tRoot1);
             System.out.println("        t2 = " + tRoot2);
             System.out.println("        t3 = " + tRoot3);
         } else {
@@ -96,9 +133,19 @@ public class CubicSolver {
             roots[1] = tRoot2.subtract(new Complex(bNorm / 3.0));
             roots[2] = tRoot3.subtract(new Complex(bNorm / 3.0));
 
-            System.out.println("        t1 = " + tRoot1);
-            System.out.println("        t2 = " + tRoot2);
-            System.out.println("        t3 = " + tRoot3);
+            // 符号解
+            SymbolicExpression symbolRho = SymbolicExpression.sqrt(
+                SymbolicExpression.subtract(
+                    new SymbolicExpression(0),
+                    SymbolicExpression.power(SymbolicExpression.divide(symbolP, new SymbolicExpression(3.0)), new SymbolicExpression(3.0))
+                )
+            );
+            SymbolicExpression symbol2Rho = SymbolicExpression.multiply(new SymbolicExpression(2.0), SymbolicExpression.cbrt(symbolRho));
+            
+            System.out.println("        t1 = 2∛(ρ)cos(θ/3) = " + tRoot1);
+            System.out.println("        t2 = 2∛(ρ)cos((θ+2π)/3) = " + tRoot2);
+            System.out.println("        t3 = 2∛(ρ)cos((θ+4π)/3) = " + tRoot3);
+            System.out.println("        其中 ρ = " + symbolRho + " = " + rho + ", θ = arccos(-q/(2ρ)) = " + theta);
         }
 
         // 从t转换回x

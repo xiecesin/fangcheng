@@ -17,6 +17,73 @@ getcontext().prec = 50
 
 
 @dataclass(frozen=True)
+class SymbolicExpression:
+    """Represents a symbolic mathematical expression."""
+    value: Union[float, str, Tuple[Union[float, str, Tuple], str, Union[float, str, Tuple]]]
+    
+    def __str__(self) -> str:
+        if isinstance(self.value, tuple):
+            # Handle special unary operators first
+            if self.value[0] == 'sqrt':
+                arg = self.value[1]
+                arg_str = str(arg) if isinstance(arg, (float, int)) else str(SymbolicExpression(arg))
+                return f"√{arg_str}"
+            elif self.value[0] == 'cbrt':
+                arg = self.value[1]
+                arg_str = str(arg) if isinstance(arg, (float, int)) else str(SymbolicExpression(arg))
+                return f"∛{arg_str}"
+            # Binary operators
+            else:
+                left, op, right = self.value
+                left_str = str(left) if isinstance(left, (float, int)) else str(SymbolicExpression(left))
+                right_str = str(right) if isinstance(right, (float, int)) else str(SymbolicExpression(right))
+                
+                if op == '^':
+                    if isinstance(right, float) and right == 2:
+                        return f"{left_str}²"
+                    elif isinstance(right, float) and right == 3:
+                        return f"{left_str}³"
+                    return f"{left_str}^{right_str}"
+                else:
+                    return f"({left_str} {op} {right_str})"
+        elif isinstance(self.value, str):
+            return self.value
+        else:
+            return f"{self.value:.6g}"
+
+    def evaluate(self) -> float:
+        """Evaluate the symbolic expression numerically."""
+        if isinstance(self.value, tuple):
+            # Handle special unary operators first
+            if self.value[0] == 'sqrt':
+                arg = self.value[1]
+                arg_val = arg if isinstance(arg, (float, int)) else SymbolicExpression(arg).evaluate()
+                return math.sqrt(arg_val)
+            elif self.value[0] == 'cbrt':
+                arg = self.value[1]
+                arg_val = arg if isinstance(arg, (float, int)) else SymbolicExpression(arg).evaluate()
+                return math.pow(arg_val, 1/3)
+            # Binary operators
+            else:
+                left, op, right = self.value
+                
+                left_val = left if isinstance(left, (float, int)) else SymbolicExpression(left).evaluate()
+                right_val = right if isinstance(right, (float, int)) else SymbolicExpression(right).evaluate()
+                
+                if op == '+':
+                    return left_val + right_val
+                elif op == '-':
+                    return left_val - right_val
+                elif op == '*':
+                    return left_val * right_val
+                elif op == '/':
+                    return left_val / right_val
+                elif op == '^':
+                    return math.pow(left_val, right_val)
+        return float(self.value)
+
+
+@dataclass(frozen=True)
 class ComplexNumber:
     """Represents a complex number with real and imaginary parts."""
     real: float
@@ -221,6 +288,8 @@ class CubicSolver:
         ))
 
         # Step 5: Solve based on discriminant
+        shift = -b_norm / 3
+        
         if abs(discriminant) < 1e-10:  # Δ = 0
             if abs(p) < 1e-10 and abs(q) < 1e-10:
                 # Triple root
@@ -234,14 +303,34 @@ class CubicSolver:
                 # One simple root and one double root
                 t1 = 3 * q / p
                 t2 = t3 = -3 * q / (2 * p)
+                # Create symbolic expressions
+                symbolic_t1 = SymbolicExpression(t1)
+                symbolic_t2 = SymbolicExpression(t2)
                 self.steps.append(SolutionStep(
                     "二重根情况",
                     "Δ = 0, p ≠ 0 或 q ≠ 0",
-                    f"t₁ = {t1:.6g}, t₂ = t₃ = {t2:.6g}"
+                    f"t₁ = {symbolic_t1}, t₂ = t₃ = {symbolic_t2}"
                 ))
+            
+            x1 = t1 + shift
+            x2 = t2 + shift
+            x3 = t3 + shift
+            roots = [x1, x2, x3]
+
         elif discriminant > 0:  # One real root, two complex conjugate roots
-            u = (-q/2 + math.sqrt(discriminant))**(1/3)
-            v = (-q/2 - math.sqrt(discriminant))**(1/3)
+            sqrt_discriminant = math.sqrt(discriminant)
+            u = (-q/2 + sqrt_discriminant)**(1/3)
+            v = (-q/2 - sqrt_discriminant)**(1/3)
+            
+            # Create symbolic expressions
+            symbolic_sqrt_discriminant = SymbolicExpression(('sqrt', discriminant))
+            # For addition and subtraction inside cbrt
+            symbolic_u_arg = (-q/2, '+', sqrt_discriminant)
+            symbolic_v_arg = (-q/2, '-', sqrt_discriminant)
+            symbolic_u = SymbolicExpression(('cbrt', symbolic_u_arg))
+            symbolic_v = SymbolicExpression(('cbrt', symbolic_v_arg))
+            symbolic_t1 = SymbolicExpression((symbolic_u.value[1], '+', symbolic_v.value[1]))
+            
             t1 = u + v
             t2 = -(u + v)/2 + (u - v) * math.sqrt(3)/2 * 1j
             t3 = -(u + v)/2 - (u - v) * math.sqrt(3)/2 * 1j
@@ -249,11 +338,10 @@ class CubicSolver:
             self.steps.append(SolutionStep(
                 "一个实根，两个复根",
                 "Δ > 0",
-                f"t₁ = {t1:.6g}, t₂ = {ComplexNumber(t2.real, t2.imag)}, t₃ = {ComplexNumber(t3.real, t3.imag)}"
+                f"t₁ = {symbolic_t1} = {t1:.6g}, t₂ = {ComplexNumber(t2.real, t2.imag)}, t₃ = {ComplexNumber(t3.real, t3.imag)}"
             ))
 
             # Convert back to x
-            shift = -b_norm / 3
             x1 = t1 + shift
             x2 = ComplexNumber(t2.real + shift, t2.imag)
             x3 = ComplexNumber(t3.real + shift, t3.imag)
@@ -263,31 +351,38 @@ class CubicSolver:
             rho = math.sqrt(-p**3 / 27)
             theta = math.acos(-q / (2 * rho))
 
+            # Create symbolic expressions for trigonometric solution
+            symbolic_p = SymbolicExpression(p)
+            symbolic_q = SymbolicExpression(q)
+            symbolic_rho = SymbolicExpression(('sqrt', (-p**3, '/', 27)))
+            
             t1 = 2 * (-p/3)**0.5 * math.cos(theta/3)
             t2 = 2 * (-p/3)**0.5 * math.cos((theta + 2*math.pi)/3)
             t3 = 2 * (-p/3)**0.5 * math.cos((theta + 4*math.pi)/3)
 
+            # Create symbolic expressions for the roots
+            symbolic_t1 = SymbolicExpression(t1)
+            symbolic_t2 = SymbolicExpression(t2)
+            symbolic_t3 = SymbolicExpression(t3)
+
             self.steps.append(SolutionStep(
                 "三个不同实根",
-                "Δ < 0",
-                f"t₁ = {t1:.6g}, t₂ = {t2:.6g}, t₃ = {t3:.6g}"
+                "Δ < 0 (不可约情况)",
+                f"t₁ = {symbolic_t1}, t₂ = {symbolic_t2}, t₃ = {symbolic_t3}"
             ))
 
             # Convert back to x
-            shift = -b_norm / 3
             x1 = t1 + shift
             x2 = t2 + shift
             x3 = t3 + shift
             roots = [x1, x2, x3]
 
-        # Handle the case where we have real roots from the discriminant = 0 case
-        if discriminant == 0 or (abs(discriminant) < 1e-10 and not (discriminant > 0)):
-            if 'x1' not in locals():
-                shift = -b_norm / 3
-                x1 = t1 + shift
-                x2 = t2 + shift
-                x3 = t3 + shift
-                roots = [x1, x2, x3]
+        # Add exact expressions step
+        self.steps.append(SolutionStep(
+            "精确表达式",
+            "x = t - b/(3a)",
+            f"x₁ = {roots[0]:.6g}, x₂ = {roots[1]}, x₃ = {roots[2]}"
+        ))
 
         return EquationSolution(
             roots=roots,
@@ -401,24 +496,186 @@ class QuarticSolver:
             f"y⁴ + {p:.6g}y² + {q:.6g}y + {r:.6g} = 0"
         ))
 
-        # For simplicity, we'll use numerical methods for quartic equations
-        # since the analytical solution is extremely complex
-        roots = self._numerical_quartic_roots([1, 0, p, q, r])
+        # Step 4: Solve using Ferrari's method
+        # First, check if it's a biquadratic equation (q = 0)
+        if abs(q) < 1e-10:
+            self.steps.append(SolutionStep(
+                "双二次方程情况",
+                "y⁴ + py² + r = 0 (q = 0)",
+                "令 z = y²，得到 z² + pz + r = 0"
+            ))
+            
+            # Solve the quadratic equation z² + pz + r = 0
+            quadratic_discriminant = p**2 - 4*1*r
+            sqrt_quad_disc = math.sqrt(abs(quadratic_discriminant))
+            
+            if quadratic_discriminant >= 0:
+                z1 = (-p + sqrt_quad_disc) / 2
+                z2 = (-p - sqrt_quad_disc) / 2
+                
+                # Create symbolic expressions
+                symbol_sqrt_quad_disc = SymbolicExpression(('sqrt', quadratic_discriminant))
+                symbolic_z1 = SymbolicExpression(((-p, '+', symbol_sqrt_quad_disc.value), '/', 2))
+                symbolic_z2 = SymbolicExpression(((-p, '-', symbol_sqrt_quad_disc.value), '/', 2))
+                
+                self.steps.append(SolutionStep(
+                    "求解二次方程",
+                    "z² + pz + r = 0",
+                    f"z₁ = {symbolic_z1} = {z1:.6g}, z₂ = {symbolic_z2} = {z2:.6g}"
+                ))
+                
+                # Solve y² = z1 and y² = z2
+                roots = []
+                for z in [z1, z2]:
+                    if z > 0:
+                        sqrt_z = math.sqrt(z)
+                        roots.extend([sqrt_z, -sqrt_z])
+                    elif z == 0:
+                        roots.extend([0, 0])
+                    else:
+                        sqrt_z = math.sqrt(-z)
+                        roots.append(ComplexNumber(0, sqrt_z))
+                        roots.append(ComplexNumber(0, -sqrt_z))
+            else:
+                # Complex roots for z
+                z1 = ComplexNumber(-p/2, sqrt_quad_disc/2)
+                z2 = ComplexNumber(-p/2, -sqrt_quad_disc/2)
+                
+                self.steps.append(SolutionStep(
+                    "求解二次方程 (复根)",
+                    "z² + pz + r = 0",
+                    f"z₁ = {z1}, z₂ = {z2}"
+                ))
+                
+                # Solve y² = z1 and y² = z2
+                roots = []
+                for z in [z1, z2]:
+                    # Compute square roots of complex numbers
+                    r = math.sqrt(z.real**2 + z.imag**2)
+                    theta = math.atan2(z.imag, z.real)
+                    
+                    sqrt_r = math.sqrt(r)
+                    half_theta = theta / 2
+                    
+                    root1 = ComplexNumber(sqrt_r * math.cos(half_theta), sqrt_r * math.sin(half_theta))
+                    root2 = ComplexNumber(sqrt_r * math.cos(half_theta + math.pi), sqrt_r * math.sin(half_theta + math.pi))
+                    
+                    roots.extend([root1, root2])
+        else:
+            # General quartic equation (q ≠ 0), use Ferrari's method
+            self.steps.append(SolutionStep(
+                "Ferrari方法求解",
+                "引入参数m，将方程分解为两个二次方程",
+                "y⁴ + py² + qy + r = 0 → (y² + my + n)(y² - my + p + n) = y⁴ + (2n + p)y² + my² + m(p)y + n(p + n)"
+            ))
+            
+            # Step 5: Find m by solving the cubic resolvent
+            self.steps.append(SolutionStep(
+                "求解三次预解方程",
+                "m³ + 2pm² + (p² - 4r)m - q² = 0",
+                "寻找实数解m"
+            ))
+            
+            # Solve the cubic resolvent: m³ + 2pm² + (p² - 4r)m - q² = 0
+            cubic_a = 1.0
+            cubic_b = 2.0 * p
+            cubic_c = p**2 - 4.0 * r
+            cubic_d = -q**2
+            
+            # Create cubic solver and solve for m
+            cubic_solver = CubicSolver(cubic_a, cubic_b, cubic_c, cubic_d)
+            cubic_solution = cubic_solver.solve()
+            
+            # Find a real root for m
+            m = None
+            for root in cubic_solution.roots:
+                if isinstance(root, (int, float)) and abs(root) < 1e10:  # Avoid very large roots
+                    m = root
+                    break
+            if m is None:
+                # If no real root found, use numerical method
+                self.steps.append(SolutionStep(
+                    "三次预解方程无合适实根",
+                    "使用数值方法求解",
+                    ""
+                ))
+                roots = self._numerical_quartic_roots([1, 0, p, q, r])
+            else:
+                self.steps.append(SolutionStep(
+                    "找到预解方程的实根",
+                    "m³ + 2pm² + (p² - 4r)m - q² = 0",
+                    f"m = {m:.6g}"
+                ))
+                
+                # Step 6: Calculate n
+                n = (m**2 + 2*p) / 4 - r / m if m != 0 else (m**2 + 2*p) / 4
+                
+                # Step 7: Form the two quadratic equations
+                # (y² + my + n)(y² - my + (p + 2n)) = 0
+                quadratic1_a = 1.0
+                quadratic1_b = m
+                quadratic1_c = n
+                
+                quadratic2_a = 1.0
+                quadratic2_b = -m
+                quadratic2_c = p + 2*n
+                
+                self.steps.append(SolutionStep(
+                    "分解为两个二次方程",
+                    "(y² + my + n)(y² - my + (p + 2n)) = 0",
+                    f"第一个二次方程: y² + {m:.6g}y + {n:.6g} = 0\n第二个二次方程: y² - {m:.6g}y + {(p + 2*n):.6g} = 0"
+                ))
+                
+                # Step 8: Solve the two quadratic equations
+                roots = []
+                
+                # Solve first quadratic equation
+                quad1_discriminant = quadratic1_b**2 - 4*quadratic1_a*quadratic1_c
+                if quad1_discriminant >= 0:
+                    sqrt_quad1 = math.sqrt(quad1_discriminant)
+                    y1 = (-quadratic1_b + sqrt_quad1) / (2*quadratic1_a)
+                    y2 = (-quadratic1_b - sqrt_quad1) / (2*quadratic1_a)
+                    roots.extend([y1, y2])
+                else:
+                    sqrt_quad1 = math.sqrt(-quad1_discriminant)
+                    y1 = ComplexNumber(-quadratic1_b/(2*quadratic1_a), sqrt_quad1/(2*quadratic1_a))
+                    y2 = ComplexNumber(-quadratic1_b/(2*quadratic1_a), -sqrt_quad1/(2*quadratic1_a))
+                    roots.extend([y1, y2])
+                
+                # Solve second quadratic equation
+                quad2_discriminant = quadratic2_b**2 - 4*quadratic2_a*quadratic2_c
+                if quad2_discriminant >= 0:
+                    sqrt_quad2 = math.sqrt(quad2_discriminant)
+                    y3 = (-quadratic2_b + sqrt_quad2) / (2*quadratic2_a)
+                    y4 = (-quadratic2_b - sqrt_quad2) / (2*quadratic2_a)
+                    roots.extend([y3, y4])
+                else:
+                    sqrt_quad2 = math.sqrt(-quad2_discriminant)
+                    y3 = ComplexNumber(-quadratic2_b/(2*quadratic2_a), sqrt_quad2/(2*quadratic2_a))
+                    y4 = ComplexNumber(-quadratic2_b/(2*quadratic2_a), -sqrt_quad2/(2*quadratic2_a))
+                    roots.extend([y3, y4])
 
-        # Convert back to x
+        # Convert back to x = y - b/(4a)
         shift = -b_norm / 4
         final_roots = []
         for root in roots:
-            if isinstance(root, complex):
-                final_roots.append(ComplexNumber(root.real + shift, root.imag))
-            else:
+            if isinstance(root, (int, float)):
                 final_roots.append(root + shift)
+            else:  # ComplexNumber
+                final_roots.append(ComplexNumber(root.real + shift, root.imag))
 
         self.steps.append(SolutionStep(
-            "数值解",
-            "使用数值方法求解四次方程",
-            f"找到 {len(final_roots)} 个根"
+            "转换回原变量",
+            "x = y - b/(4a)",
+            ""
         ))
+        
+        for i, root in enumerate(final_roots):
+            self.steps.append(SolutionStep(
+                f"最终根 {i+1}",
+                "",
+                f"x{i+1} = {root}"
+            ))
 
         return EquationSolution(
             roots=final_roots,
