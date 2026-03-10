@@ -55,14 +55,18 @@ class MarkdownExporter:
         # 原方程
         lines.append("## 原方程")
         lines.append("")
-        lines.append(f"$$ {equation} $$")
+        lines.append("$$")
+        lines.append(equation)
+        lines.append("$$")
         lines.append("")
         
         # 系数
         lines.append("## 系数")
         lines.append("")
         coeffs_latex = ", ".join([latex(coeff) for coeff in solution.coefficients])
-        lines.append(f"$$ a={coeffs_latex} $$")
+        lines.append("$$")
+        lines.append(f"a = {coeffs_latex}")
+        lines.append("$$")
         lines.append("")
         
         # 求解步骤
